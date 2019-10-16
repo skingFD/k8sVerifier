@@ -4,27 +4,29 @@ import java.util.ArrayList;
 
 import bean.myYaml;
 
+//KV: Key-Value pair
+//BV: BitVector
 public class BVgenerator{
 	ArrayList<myYaml> YamlList; 
 	ArrayList<String> SelectorKV;//store the corresponding relationship between KV pair and BitVector
 	ArrayList<String> AllowKV;
-	int SelectorBVlength;
-	int AllowBVlength;
+	int SelectorBVLength;
+	int AllowBVLength;
 	
 	public BVgenerator() {
 		YamlList = new ArrayList<myYaml>();
 		SelectorKV = new ArrayList<String>();
 		AllowKV = new ArrayList<String>();
-		SelectorBVlength = 0;
-		AllowBVlength = 0;
+		SelectorBVLength = 0;
+		AllowBVLength = 0;
 	}
 	
 	public BVgenerator(ArrayList<myYaml> YamlList) {
 		this.YamlList = YamlList;		
 		SelectorKV = new ArrayList<String>();
 		AllowKV = new ArrayList<String>();
-		SelectorBVlength = 0;
-		AllowBVlength = 0;
+		SelectorBVLength = 0;
+		AllowBVLength = 0;
 	}
 	
 	public ArrayList<myYaml> getYamlList() {
@@ -51,31 +53,43 @@ public class BVgenerator{
 		AllowKV = allowKV;
 	}
 
-	public int getSelectorBVlength() {
-		return SelectorBVlength;
+	public int getSelectorBVLength() {
+		return SelectorBVLength;
 	}
 
-	public void setSelectorBVlength(int selectorBVlength) {
-		SelectorBVlength = selectorBVlength;
+	public void setSelectorBVLength(int selectorBVLength) {
+		SelectorBVLength = selectorBVLength;
 	}
 
-	public int getAllowBVlength() {
-		return AllowBVlength;
+	public int getAllowBVLength() {
+		return AllowBVLength;
 	}
 
-	public void setAllowBVlength(int allowBVlength) {
-		AllowBVlength = allowBVlength;
+	public void setAllowBVLength(int allowBVLength) {
+		AllowBVLength = allowBVLength;
 	}
 
 	public void CalculateSelectorBVlength() {
 		for(int i = 0; i < YamlList.size(); i++) {
-			// TODO Yaml get KV pair
+			ArrayList<String> SelectorList = YamlList.get(i).getSelectorList();
+			for(int j = 0; j< SelectorList.size();j++) {
+				if (!SelectorKV.contains(SelectorList.get(j))){
+					SelectorKV.add(SelectorList.get(j));
+				}
+			}
 		}
+		SelectorBVLength = SelectorKV.size();
 	}
 	
 	public void CalculateAllowBVlength() {
 		for(int i = 0; i < YamlList.size(); i++) {
-			
+			ArrayList<String> AllowList = YamlList.get(i).getAllowList();
+			for(int j = 0; j< AllowList.size();j++) {
+				if (!AllowKV.contains(AllowList.get(j))){
+					AllowKV.add(AllowList.get(j));
+				}
+			}
 		}
+		AllowBVLength = AllowKV.size();
 	}
 }

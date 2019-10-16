@@ -8,7 +8,7 @@ import bean.pod;
 
 public class driver{ 
 	public static void main(String args[]) {
-		// TODO How to analysis porperties of pods and svcs
+		// TODO Use Bit Vector to analysis porperties of pods and svcs
 		ArrayList<pod> pods = new ArrayList<pod>();
 		Map labels1 = new HashMap<String,String>();
 		labels1.put("app", "test1");

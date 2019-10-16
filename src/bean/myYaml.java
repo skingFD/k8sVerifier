@@ -84,7 +84,7 @@ public class myYaml{
 						LinkedHashMap ipBlock = (LinkedHashMap) fromItem.get(keyString);
 						if(ipBlock.get("cidr")!=null) { //Ingress ipBlock cidr
 							String cidr = (String)ipBlock.get("cidr");
-							result.add("cid=" + cidr);
+							result.add("cidr=" + cidr);
 						}
 						if(ipBlock.get("except")!=null) {
 							String except = ipBlock.get("except").toString();
@@ -111,7 +111,7 @@ public class myYaml{
 			}
 		}
 		// TODO select ports
-		
+		// TODO How to deal with IP block
 		// get egress
 		ArrayList egress = (ArrayList) spec.get("egress");
 		LinkedHashMap eMap = (LinkedHashMap) egress.get(0);
