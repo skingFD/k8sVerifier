@@ -68,6 +68,51 @@ public class myYaml{
 		return result;
 	}
 	
+	// TODO finish this policy generate function
+	public policies getPolicy(boolean inout) {//0:ingress, 1:egress
+		policies result = new policies();
+		policy inPolicy = new policy();
+		policy ePolicy = new policy();
+		
+		//spec
+		LinkedHashMap spec = (LinkedHashMap) content.get("spec");
+		if(spec.get("policyTypes") != null) {
+			ArrayList policyTypes = (ArrayList) spec.get("policyTypes");
+		}else {
+			// TODO error, no policyType
+		}
+		if(spec.get("podSelector") != null) { // spec.podSelector
+			LinkedHashMap podSelector = (LinkedHashMap) spec.get("podSelector");
+			if(podSelector.isEmpty()) {
+				result.setAllPods(true);
+			}else {
+				if(podSelector.get("matchLabels") != null) { // spec.podSelector.matchLabels
+					LinkedHashMap matchLabels = (LinkedHashMap) podSelector.get("matchLabels");
+					for(Object key: matchLabels.keySet()) {
+						result.getPods().put((String)key, (String)matchLabels.get((String)key));
+					}
+				}else {
+					// TODO error, no matchLabels
+				}
+			}
+		}else {
+			// TODO error, no podSelector
+		}
+		
+		// metadata
+				LinkedHashMap metadata = (LinkedHashMap) content.get("metadata");
+				if(metadata.get("name")!=null) { // metadata.name
+					result.setName((String) metadata.get("name"));
+				}
+				if(metadata.get("namespace")!=null) { // metadata.namespace
+					result.setNamespace((String) metadata.get("namespace"));
+				}else {
+					result.setNamespace("default");
+				}
+		
+		return result;
+	}
+	
 	public ArrayList<String> getAllowList() {
 		ArrayList<String> result = new ArrayList<String>();
 		//get ingress
