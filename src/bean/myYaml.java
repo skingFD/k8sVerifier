@@ -76,20 +76,54 @@ public class myYaml{
 		
 		//spec
 		LinkedHashMap spec = (LinkedHashMap) content.get("spec");
-		if(spec.get("policyTypes") != null) {
+		if(spec.get("policyTypes") != null) { // spec.policyType
 			ArrayList policyTypes = (ArrayList) spec.get("policyTypes");
+			for(int i = 0; i < policyTypes.size(); i++) {
+				String policyType = (String)policyTypes.get(i);
+				if(policyType.equals("Ingress")) {
+					result.setHaveIn(true);
+				}else if(policyType.equals("Egress")) {
+					result.setHaveE(true);
+				}
+			}
 		}else {
 			// TODO error, no policyType
+		}
+		if(spec.get("ingress") != null) { // spec.ingress
+			ArrayList ingress = (ArrayList) spec.get("ingress");
+			if(ingress.size() != 0) {
+				result.setHaveIn(true);
+			}
+			for(int i = 0; i < ingress.size(); i++) {
+				
+			}
+			// TODO analysis matchlabels
+		}
+		if(spec.get("egress") != null) { // spec.egress
+			ArrayList egress = (ArrayList) spec.get("egress");
+			if(egress.size() != 0) {
+				result.setHaveE(true);
+			}
 		}
 		if(spec.get("podSelector") != null) { // spec.podSelector
 			LinkedHashMap podSelector = (LinkedHashMap) spec.get("podSelector");
 			if(podSelector.isEmpty()) {
-				result.setAllPods(true);
+				if(result.isHaveIn()) {
+					inPolicy.setAllPods(true);
+				}
+				if(result.isHaveE()) {
+					ePolicy.setAllPods(true);
+				}
 			}else {
 				if(podSelector.get("matchLabels") != null) { // spec.podSelector.matchLabels
 					LinkedHashMap matchLabels = (LinkedHashMap) podSelector.get("matchLabels");
 					for(Object key: matchLabels.keySet()) {
-						result.getPods().put((String)key, (String)matchLabels.get((String)key));
+						if(result.isHaveIn()) {
+							inPolicy.getPods().put((String)key, (String)matchLabels.get((String)key));
+						}
+						if(result.isHaveE()) {
+							inPolicy.getPods().put((String)key, (String)matchLabels.get((String)key));
+						}
 					}
 				}else {
 					// TODO error, no matchLabels
@@ -100,16 +134,33 @@ public class myYaml{
 		}
 		
 		// metadata
-				LinkedHashMap metadata = (LinkedHashMap) content.get("metadata");
-				if(metadata.get("name")!=null) { // metadata.name
-					result.setName((String) metadata.get("name"));
-				}
-				if(metadata.get("namespace")!=null) { // metadata.namespace
-					result.setNamespace((String) metadata.get("namespace"));
-				}else {
-					result.setNamespace("default");
-				}
-		
+		LinkedHashMap metadata = (LinkedHashMap) content.get("metadata");
+		if (metadata.get("name") != null) { // metadata.name
+			if (result.isHaveIn()) {
+				inPolicy.setName((String) metadata.get("name"));
+			}
+			if (result.isHaveE()) {
+				ePolicy.setName((String) metadata.get("name"));
+			}
+		}
+		if (metadata.get("namespace") != null) { // metadata.namespace
+			if (result.isHaveIn()) {
+				inPolicy.setNamespace((String) metadata.get("namespace"));
+			}
+			if (result.isHaveE()) {
+				ePolicy.setNamespace((String) metadata.get("namespace"));
+			}
+		} else {
+			if (result.isHaveIn()) {
+				inPolicy.setNamespace("default");
+			}
+			if (result.isHaveE()) {
+				ePolicy.setNamespace("default");
+			}
+		}
+
+		result.setInPolicy(inPolicy);
+		result.setePolicy(ePolicy);
 		return result;
 	}
 	
