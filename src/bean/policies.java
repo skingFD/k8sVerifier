@@ -1,23 +1,28 @@
 package bean;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+
 public class policies{
 	boolean haveIn;
 	boolean haveE;
-	policy inPolicy;
-	policy ePolicy;
+	String name;
+	String namespace;
+	HashMap<String,String> pods;
+	ArrayList<policy> Policies;
 	
 	public policies() {
-		haveIn = false;
-		haveE = false;
-		inPolicy = new policy();
-		ePolicy = new policy();
+
+		Policies = new ArrayList<policy>();
 	}
 	
-	public policies(boolean haveIn, boolean haveE ,policy inPolicy, policy ePolicy) {
+	public policies(boolean haveIn, boolean haveE, String name, String namespace, HashMap<String,String> pods, ArrayList<policy> Policies) {
 		this.haveIn = haveIn;
 		this.haveE = haveE;
-		this.inPolicy = inPolicy;
-		this.ePolicy = ePolicy;
+		this.name = name;
+		this.namespace = namespace;
+		this.pods = pods;
+		this.Policies = Policies;
 	}
 	
 	public boolean isHaveIn() {
@@ -36,16 +41,54 @@ public class policies{
 		this.haveE = haveE;
 	}
 
-	public policy getInPolicy() {
-		return inPolicy;
+	public String getName() {
+		return name;
 	}
-	public void setInPolicy(policy inPolicy) {
-		this.inPolicy = inPolicy;
+
+	public void setName(String name) {
+		this.name = name;
 	}
-	public policy getePolicy() {
-		return ePolicy;
+
+	public String getNamespace() {
+		return namespace;
 	}
-	public void setePolicy(policy ePolicy) {
-		this.ePolicy = ePolicy;
+
+	public void setNamespace(String namespace) {
+		this.namespace = namespace;
+	}
+
+	public HashMap<String, String> getPods() {
+		return pods;
+	}
+
+	public void setPods(HashMap<String, String> pods) {
+		this.pods = pods;
+	}
+
+	public ArrayList<policy> getPolicies() {
+		return Policies;
+	}
+
+	public void setPolicies(ArrayList<policy> policies) {
+		Policies = policies;
+	}
+	
+	public void add(policy Policy) {
+		Policies.add(Policy);
+	}
+	
+	public policy get(int i) {
+		return Policies.get(i);
+	}
+
+	public ArrayList<String> getAllowList(){
+		ArrayList<String> result = new ArrayList<String>();
+		
+		return result;
+	}
+	
+	public ArrayList<String> getSelectorList(){	
+		ArrayList<String> result = new ArrayList<String>();
+		return result;
 	}
 }

@@ -68,11 +68,9 @@ public class myYaml{
 		return result;
 	}
 	
-	// TODO finish this policy generate function
-	public policies getPolicy(boolean inout) {//0:ingress, 1:egress
+	// policy generate function
+	public policies getPolicies() {
 		policies result = new policies();
-		policy inPolicy = new policy();
-		policy ePolicy = new policy();
 		
 		//spec
 		LinkedHashMap spec = (LinkedHashMap) content.get("spec");
@@ -90,19 +88,152 @@ public class myYaml{
 			// TODO error, no policyType
 		}
 		if(spec.get("ingress") != null) { // spec.ingress
-			ArrayList ingress = (ArrayList) spec.get("ingress");
-			if(ingress.size() != 0) {
+			ArrayList ingressArray = (ArrayList) spec.get("ingress");			
+			if(ingressArray.size() != 0) {
 				result.setHaveIn(true);
 			}
-			for(int i = 0; i < ingress.size(); i++) {
-				
+			for (int ingressIndex = 0; ingressIndex < ingressArray.size(); ingressIndex++) {
+				LinkedHashMap ingress = (LinkedHashMap) ingressArray.get(ingressIndex);
+				if (ingress.get("from") != null) { // spec.ingress.from
+					ArrayList from = (ArrayList) ingress.get("from");
+					for (int i = 0; i < from.size(); i++) {
+						LinkedHashMap fromItem = (LinkedHashMap) from.get(i);
+						policy inPolicy = new policy(false);
+						for (Object keyObject : fromItem.keySet()) {
+							String key = (String) keyObject;
+							if (key.equals("ipBlock")) { // spec.ingress.from.ipBlock
+								LinkedHashMap ipBlock = (LinkedHashMap) fromItem.get(key);
+								inPolicy.setHaveCidr(true);
+								if (ipBlock.get("cidr") != null) { // spec.ingress.from.ipBlock.cidr
+									String cidr = (String) ipBlock.get("cidr");
+									inPolicy.getCidr().add(cidr);
+								}
+								if (ipBlock.get("except") != null) { // spec.ingress.from.ipBlock.except
+									ArrayList except = (ArrayList) ipBlock.get("except");
+									for (int j = 0; j < except.size(); j++) {
+										String expectItem = (String) except.get(j);
+										inPolicy.getExcept().add(expectItem);
+									}
+								}
+							} else if (key.equals("namespaceSelector")) { // spec.ingress.from.namespaceSelector
+								LinkedHashMap namespaceSelector = (LinkedHashMap) fromItem.get("namespaceSelector");
+								inPolicy.setHaveNsSelector(true);
+								if (namespaceSelector.get("matchLabels") != null) { // spec.ingress.from.namespaceSelector.matchLabels
+									LinkedHashMap matchLabels = (LinkedHashMap) namespaceSelector.get("matchLabels");
+									for (Object NSkeyObject : matchLabels.keySet()) {
+										String NSkey = (String) NSkeyObject;
+										String NSValue = (String) matchLabels.get(NSkey);
+										inPolicy.getNsSelector().put(NSkey, NSValue);
+									}
+								}
+							} else if (key.equals("podSelector")) { // sepc.ingress.from.podSelector
+								LinkedHashMap podSelector = (LinkedHashMap) fromItem.get("podSelector");
+								inPolicy.setHavePodSelector(true);
+								if (podSelector.get("matchLabels") != null) { // spec.ingress.from.podSelector.matchLabels
+									LinkedHashMap matchLabels = (LinkedHashMap) podSelector.get("matchLabels");
+									for (Object PodkeyObject : matchLabels.keySet()) {
+										String Podkey = (String) PodkeyObject;
+										String PodValue = (String) matchLabels.get(Podkey);
+										inPolicy.getPodSelector().put(Podkey, PodValue);
+									}
+								}
+							}
+
+						}
+					}
+				}
+				if (ingress.get("ports") != null) { // spec.ingress.ports
+					ArrayList ports = (ArrayList) ingress.get("ports");
+					for (int i = 0; i < ports.size(); i++) {
+						port Port= new port();
+						LinkedHashMap portYaml = (LinkedHashMap) ports.get(i);
+						if(portYaml.get("port") != null) {
+							Port.setPort((Integer) portYaml.get("port"));
+						}else {
+							Port.setPort(-1);
+						}
+						if(portYaml.get("protocol") != null) {
+							Port.setProtocol((String) portYaml.get("protocol"));
+						}else {
+							Port.setProtocol("TCP");
+						}
+						inPolicy.getPorts().add(Port);
+					}
+				}
 			}
-			// TODO analysis matchlabels
 		}
-		if(spec.get("egress") != null) { // spec.egress
-			ArrayList egress = (ArrayList) spec.get("egress");
-			if(egress.size() != 0) {
+		if (spec.get("egress") != null) { // spec.egress
+			ArrayList egressArray = (ArrayList) spec.get("egress");
+			if (egressArray.size() != 0) {
 				result.setHaveE(true);
+			}
+			for (int egressIndex = 0; egressIndex < egressArray.size(); egressIndex++) {
+				LinkedHashMap egress = (LinkedHashMap) egressArray.get(egressIndex);
+				if (egress.get("to") != null) { // spec.egress.from
+					ArrayList to = (ArrayList) egress.get("to");
+					for (int i = 0; i < to.size(); i++) {
+						LinkedHashMap toItem = (LinkedHashMap) to.get(i);
+						for (Object keyObject : toItem.keySet()) {
+							String key = (String) keyObject;
+							policy ePolicy = new policy(false);
+							if (key.equals("ipBlock")) { // spec.egress.to.ipBlock
+								LinkedHashMap ipBlock = (LinkedHashMap) toItem.get(key);
+								ePolicy.setHaveCidr(true);
+								if (ipBlock.get("cidr") != null) { // spec.egress.to.ipBlock.cidr
+									String cidr = (String) ipBlock.get("cidr");
+									ePolicy.getCidr().add(cidr);
+								}
+								if (ipBlock.get("except") != null) { // spec.egress.to.ipBlock.except
+									ArrayList except = (ArrayList) ipBlock.get("except");
+									for (int j = 0; j < except.size(); j++) {
+										String expectItem = (String) except.get(j);
+										ePolicy.getExcept().add(expectItem);
+									}
+								}
+							} else if (key.equals("namespaceSelector")) { // spec.egress.to.namespaceSelector
+								LinkedHashMap namespaceSelector = (LinkedHashMap) toItem.get("namespaceSelector");
+								ePolicy.setHaveNsSelector(true);
+								if (namespaceSelector.get("matchLabels") != null) { // spec.egress.to.namespaceSelector.matchLabels
+									LinkedHashMap matchLabels = (LinkedHashMap) namespaceSelector.get("matchLabels");
+									for (Object NSkeyObject : matchLabels.keySet()) {
+										String NSkey = (String) NSkeyObject;
+										String NSValue = (String) matchLabels.get(NSkey);
+										ePolicy.getNsSelector().put(NSkey, NSValue);
+									}
+								}
+							} else if (key.equals("podSelector")) { // sepc.egress.to.podSelector
+								LinkedHashMap podSelector = (LinkedHashMap) toItem.get("podSelector");
+								ePolicy.setHavePodSelector(true);
+								if (podSelector.get("matchLabels") != null) { // spec.egress.to.podSelector.matchLabels
+									LinkedHashMap matchLabels = (LinkedHashMap) podSelector.get("matchLabels");
+									for (Object PodkeyObject : matchLabels.keySet()) {
+										String Podkey = (String) PodkeyObject;
+										String PodValue = (String) matchLabels.get(Podkey);
+										ePolicy.getPodSelector().put(Podkey, PodValue);
+									}
+								}
+							}
+						}
+					}
+				}
+				if (egress.get("ports") != null) { // spec.egress.ports
+					ArrayList ports = (ArrayList) egress.get("ports");
+					for (int i = 0; i < ports.size(); i++) {
+						port Port= new port();
+						LinkedHashMap portYaml = (LinkedHashMap) ports.get(i);
+						if(portYaml.get("port") != null) {
+							Port.setPort((Integer) portYaml.get("port"));
+						}else {
+							Port.setPort(-1);
+						}
+						if(portYaml.get("protocol") != null) {
+							Port.setProtocol((String) portYaml.get("protocol"));
+						}else {
+							Port.setProtocol("TCP");
+						}
+						ePolicy.getPorts().add(Port);
+					}
+				}
 			}
 		}
 		if(spec.get("podSelector") != null) { // spec.podSelector
@@ -164,98 +295,100 @@ public class myYaml{
 		return result;
 	}
 	
-	public ArrayList<String> getAllowList() {
-		ArrayList<String> result = new ArrayList<String>();
-		//get ingress
-		LinkedHashMap spec = (LinkedHashMap) content.get("spec");
-		ArrayList ingress = (ArrayList) spec.get("ingress");
-		LinkedHashMap inMap = (LinkedHashMap) ingress.get(0);
-		if(inMap.get("from")!=null) {
-			ArrayList from = (ArrayList) inMap.get("from");
-			for(int i = 0; i < from.size(); i++) {
-				LinkedHashMap fromItem = (LinkedHashMap) from.get(i);
-				for (Object key: fromItem.keySet()) {
-					String keyString = (String) key;
-					if(keyString.equals("ipBlock")) { //Ingress ipBlock
-						LinkedHashMap ipBlock = (LinkedHashMap) fromItem.get(keyString);
-						if(ipBlock.get("cidr")!=null) { //Ingress ipBlock cidr
-							String cidr = (String)ipBlock.get("cidr");
-							result.add("cidr=" + cidr);
-						}
-						if(ipBlock.get("except")!=null) {
-							String except = ipBlock.get("except").toString();
-							result.add("except" + except);
-						}
-					}else if(keyString.equals("namespaceSelector")){ //Ingress nsSelector
-						LinkedHashMap namespaceSelector = (LinkedHashMap) fromItem.get(keyString);
-						if(namespaceSelector.get("matchLabels")!=null) {
-							LinkedHashMap matchLabels = (LinkedHashMap) namespaceSelector.get("matchLabels");
-							for (Object nsLabel: matchLabels.keySet()) {//ingress ns_key value 
-								result.add("ns_"+nsLabel.toString() + "=" + matchLabels.get(nsLabel.toString()).toString());
-							}
-						}
-					}else if(keyString.equals("podSelector")){ //Ingress podSelector
-						LinkedHashMap podSelector = (LinkedHashMap) fromItem.get(keyString);
-						if(podSelector.get("matchLabels")!=null) {
-							LinkedHashMap matchLabels = (LinkedHashMap) podSelector.get("matchLabels");
-							for (Object Label: matchLabels.keySet()) {//ingress key value 
-								result.add(Label.toString() + "=" + matchLabels.get(Label.toString()).toString());
-							}
-						}
-					}
-				}
-			}
-		}
-		// TODO select ports
-		// TODO How to deal with IP block
-		// get egress
-		ArrayList egress = (ArrayList) spec.get("egress");
-		LinkedHashMap eMap = (LinkedHashMap) egress.get(0);
-		if(eMap.get("to")!=null) {
-			ArrayList to = (ArrayList) eMap.get("to");
-			for(int i = 0; i < to.size(); i++) {
-				LinkedHashMap toItem = (LinkedHashMap) to.get(i);
-				for (Object key: toItem.keySet()) {
-					String keyString = (String) key;
-					if(keyString.equals("ipBlock")) { //Ingress ipBlock
-						LinkedHashMap ipBlock = (LinkedHashMap) toItem.get(keyString);
-						if(ipBlock.get("cidr")!=null) { //Ingress ipBlock cidr
-							String cidr = (String)ipBlock.get("cidr");
-							result.add("cidr=" + cidr);
-						}
-						if(ipBlock.get("except")!=null) {
-							String except = ipBlock.get("except").toString();
-							result.add("except=" + except);
-						}
-					}else if(keyString.equals("namespaceSelector")){ //Ingress nsSelector
-						LinkedHashMap namespaceSelector = (LinkedHashMap) toItem.get(keyString);
-						if(namespaceSelector.get("matchLabels")!=null) {
-							LinkedHashMap matchLabels = (LinkedHashMap) namespaceSelector.get("matchLabels");
-							for (Object nsLabel: matchLabels.keySet()) {//ingress ns_key value 
-								result.add("ns_"+nsLabel.toString() + "=" + matchLabels.get(nsLabel.toString()).toString());
-							}
-						}
-					}else if(keyString.equals("podSelector")){ //Ingress podSelector
-						LinkedHashMap podSelector = (LinkedHashMap) toItem.get(keyString);
-						if(podSelector.get("matchLabels")!=null) {
-							LinkedHashMap matchLabels = (LinkedHashMap) podSelector.get("matchLabels");
-							for (Object Label: matchLabels.keySet()) {//ingress key value 
-								result.add(Label.toString() + matchLabels.get(Label.toString()).toString());
-							}
-						}
-					}
-				}
-			}
-		}
-		
-		return result;
-	}
+//	public ArrayList<String> getAllowList() {
+//		ArrayList<String> result = new ArrayList<String>();
+//		//get ingress
+//		LinkedHashMap spec = (LinkedHashMap) content.get("spec");
+//		ArrayList ingress = (ArrayList) spec.get("ingress");
+//		LinkedHashMap inMap = (LinkedHashMap) ingress.get(0);
+//		if(inMap.get("from")!=null) {
+//			ArrayList from = (ArrayList) inMap.get("from");
+//			for(int i = 0; i < from.size(); i++) {
+//				LinkedHashMap fromItem = (LinkedHashMap) from.get(i);
+//				for (Object key: fromItem.keySet()) {
+//					String keyString = (String) key;
+//					if(keyString.equals("ipBlock")) { //Ingress ipBlock
+//						LinkedHashMap ipBlock = (LinkedHashMap) fromItem.get(keyString);
+//						if(ipBlock.get("cidr")!=null) { //Ingress ipBlock cidr
+//							String cidr = (String)ipBlock.get("cidr");
+//							result.add("cidr=" + cidr);
+//						}
+//						if(ipBlock.get("except")!=null) {
+//							String except = ipBlock.get("except").toString();
+//							result.add("except" + except);
+//						}
+//					}else if(keyString.equals("namespaceSelector")){ //Ingress nsSelector
+//						LinkedHashMap namespaceSelector = (LinkedHashMap) fromItem.get(keyString);
+//						if(namespaceSelector.get("matchLabels")!=null) {
+//							LinkedHashMap matchLabels = (LinkedHashMap) namespaceSelector.get("matchLabels");
+//							for (Object nsLabel: matchLabels.keySet()) {//ingress ns_key value 
+//								result.add("ns_"+nsLabel.toString() + "=" + matchLabels.get(nsLabel.toString()).toString());
+//							}
+//						}
+//					}else if(keyString.equals("podSelector")){ //Ingress podSelector
+//						LinkedHashMap podSelector = (LinkedHashMap) fromItem.get(keyString);
+//						if(podSelector.get("matchLabels")!=null) {
+//							LinkedHashMap matchLabels = (LinkedHashMap) podSelector.get("matchLabels");
+//							for (Object Label: matchLabels.keySet()) {//ingress key value 
+//								result.add(Label.toString() + "=" + matchLabels.get(Label.toString()).toString());
+//							}
+//						}
+//					}
+//				}
+//			}
+//		}
+//		// TODO select ports
+//		// TODO How to deal with IP block
+//		// get egress
+//		ArrayList egress = (ArrayList) spec.get("egress");
+//		LinkedHashMap eMap = (LinkedHashMap) egress.get(0);
+//		if(eMap.get("to")!=null) {
+//			ArrayList to = (ArrayList) eMap.get("to");
+//			for(int i = 0; i < to.size(); i++) {
+//				LinkedHashMap toItem = (LinkedHashMap) to.get(i);
+//				for (Object key: toItem.keySet()) {
+//					String keyString = (String) key;
+//					if(keyString.equals("ipBlock")) { //Ingress ipBlock
+//						LinkedHashMap ipBlock = (LinkedHashMap) toItem.get(keyString);
+//						if(ipBlock.get("cidr")!=null) { //Ingress ipBlock cidr
+//							String cidr = (String)ipBlock.get("cidr");
+//							result.add("cidr=" + cidr);
+//						}
+//						if(ipBlock.get("except")!=null) {
+//							String except = ipBlock.get("except").toString();
+//							result.add("except=" + except);
+//						}
+//					}else if(keyString.equals("namespaceSelector")){ //Ingress nsSelector
+//						LinkedHashMap namespaceSelector = (LinkedHashMap) toItem.get(keyString);
+//						if(namespaceSelector.get("matchLabels")!=null) {
+//							LinkedHashMap matchLabels = (LinkedHashMap) namespaceSelector.get("matchLabels");
+//							for (Object nsLabel: matchLabels.keySet()) {//ingress ns_key value 
+//								result.add("ns_"+nsLabel.toString() + "=" + matchLabels.get(nsLabel.toString()).toString());
+//							}
+//						}
+//					}else if(keyString.equals("podSelector")){ //Ingress podSelector
+//						LinkedHashMap podSelector = (LinkedHashMap) toItem.get(keyString);
+//						if(podSelector.get("matchLabels")!=null) {
+//							LinkedHashMap matchLabels = (LinkedHashMap) podSelector.get("matchLabels");
+//							for (Object Label: matchLabels.keySet()) {//ingress key value 
+//								result.add(Label.toString() + matchLabels.get(Label.toString()).toString());
+//							}
+//						}
+//					}
+//				}
+//			}
+//		}
+//		
+//		return result;
+//	}
 	
 	public static void main(String args[]) {
-		myYaml myyaml = new myYaml("test.yaml");
+		myYaml myyaml = new myYaml("test1.yaml");
+		policies Policies = myyaml.getPolicies();
 		ArrayList<String> Selector = myyaml.getSelectorList();
-		ArrayList<String> Allow = myyaml.getAllowList();
+		//ArrayList<String> Allow = myyaml.getAllowList();
+		System.out.println(Policies);
 		System.out.println(Selector);
-		System.out.println(Allow);
+		//System.out.println(Allow);
 	}
 }

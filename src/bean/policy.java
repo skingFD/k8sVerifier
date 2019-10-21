@@ -9,13 +9,11 @@ public class policy{
 	boolean haveCidr;
 	boolean haveNsSelector;
 	boolean havePodSelector;
-	String name;
-	String namespace;
-	ArrayList<String> cidr;
-	ArrayList<String> except;
-	HashMap<String,String> pods; //spec.podSelector
-	HashMap<String,String> nsSelector;
-	HashMap<String,String> podSelector;
+	ArrayList<String> cidr; // spec.ingress.from.ipblock.cidr
+	ArrayList<String> except; // spec.ingress.from.ipblock.except
+	ArrayList<port> ports; // spec.ingress.ports
+	HashMap<String,String> nsSelector; // spec.ingress.from.nsSelector spec.egress.to.nsSelector
+	HashMap<String,String> podSelector; // spec.ingress.from.podSelector spec.egress.to.podSelector
 	
 	public policy() {
 		this.inout = false;
@@ -23,11 +21,9 @@ public class policy{
 		this.haveCidr = false;
 		this.haveNsSelector = false;
 		this.havePodSelector = false;
-		this.name = "";
-		this.namespace = "";
 		this.cidr = new ArrayList<String>();
 		this.except = new ArrayList<String>();
-		this.pods = new HashMap<String,String>();
+		this.ports = new ArrayList<port>();
 		this.nsSelector = new HashMap<String,String>();
 		this.podSelector = new HashMap<String,String>();
 	}
@@ -38,11 +34,9 @@ public class policy{
 		this.haveCidr = false;
 		this.haveNsSelector = false;
 		this.havePodSelector = false;
-		this.name = "";
-		this.namespace = "";
 		this.cidr = new ArrayList<String>();
 		this.except = new ArrayList<String>();
-		this.pods = new HashMap<String,String>();
+		this.ports = new ArrayList<port>();
 		this.nsSelector = new HashMap<String,String>();
 		this.podSelector = new HashMap<String,String>();
 	}
@@ -87,22 +81,6 @@ public class policy{
 		this.havePodSelector = havePodSelector;
 	}
 
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public String getNamespace() {
-		return namespace;
-	}
-
-	public void setNamespace(String namespace) {
-		this.namespace = namespace;
-	}
-
 	public ArrayList<String> getCidr() {
 		return cidr;
 	}
@@ -119,12 +97,12 @@ public class policy{
 		this.except = except;
 	}
 
-	public HashMap<String, String> getPods() {
-		return pods;
+	public ArrayList<port> getPorts(){
+		return ports;
 	}
-
-	public void setPods(HashMap<String, String> pods) {
-		this.pods = pods;
+	
+	public void setPorts(ArrayList<port> ports) {
+		this.ports = ports;
 	}
 
 	public HashMap<String, String> getNsSelector() {
@@ -142,5 +120,4 @@ public class policy{
 	public void setPodSelector(HashMap<String, String> podSelector) {
 		this.podSelector = podSelector;
 	}
-
 }

@@ -3,6 +3,7 @@ package analyzer;
 import java.util.ArrayList;
 
 import bean.myYaml;
+import bean.policies;
 
 //KV: Key-Value pair
 //BV: BitVector
@@ -83,7 +84,8 @@ public class BVgenerator{
 	
 	public void CalculateAllowBVlength() {
 		for(int i = 0; i < YamlList.size(); i++) {
-			ArrayList<String> AllowList = YamlList.get(i).getAllowList();
+			policies Policies = YamlList.get(i).getPolicies();
+			ArrayList<String> AllowList = Policies.getAllowList();
 			for(int j = 0; j< AllowList.size();j++) {
 				if (!AllowKV.contains(AllowList.get(j))){
 					AllowKV.add(AllowList.get(j));
