@@ -93,53 +93,54 @@ public class myYaml{
 				result.setHaveIn(true);
 			}
 			for (int ingressIndex = 0; ingressIndex < ingressArray.size(); ingressIndex++) {
+				policy inPolicy = new policy();
 				LinkedHashMap ingress = (LinkedHashMap) ingressArray.get(ingressIndex);
 				if (ingress.get("from") != null) { // spec.ingress.from
 					ArrayList from = (ArrayList) ingress.get("from");
 					for (int i = 0; i < from.size(); i++) {
 						LinkedHashMap fromItem = (LinkedHashMap) from.get(i);
-						policy inPolicy = new policy(false);
+						filter inFilter = new filter(false);
 						for (Object keyObject : fromItem.keySet()) {
 							String key = (String) keyObject;
 							if (key.equals("ipBlock")) { // spec.ingress.from.ipBlock
 								LinkedHashMap ipBlock = (LinkedHashMap) fromItem.get(key);
-								inPolicy.setHaveCidr(true);
+								inFilter.setHaveCidr(true);
 								if (ipBlock.get("cidr") != null) { // spec.ingress.from.ipBlock.cidr
 									String cidr = (String) ipBlock.get("cidr");
-									inPolicy.getCidr().add(cidr);
+									inFilter.getCidr().add(cidr);
 								}
 								if (ipBlock.get("except") != null) { // spec.ingress.from.ipBlock.except
 									ArrayList except = (ArrayList) ipBlock.get("except");
 									for (int j = 0; j < except.size(); j++) {
 										String expectItem = (String) except.get(j);
-										inPolicy.getExcept().add(expectItem);
+										inFilter.getExcept().add(expectItem);
 									}
 								}
 							} else if (key.equals("namespaceSelector")) { // spec.ingress.from.namespaceSelector
 								LinkedHashMap namespaceSelector = (LinkedHashMap) fromItem.get("namespaceSelector");
-								inPolicy.setHaveNsSelector(true);
+								inFilter.setHaveNsSelector(true);
 								if (namespaceSelector.get("matchLabels") != null) { // spec.ingress.from.namespaceSelector.matchLabels
 									LinkedHashMap matchLabels = (LinkedHashMap) namespaceSelector.get("matchLabels");
 									for (Object NSkeyObject : matchLabels.keySet()) {
 										String NSkey = (String) NSkeyObject;
 										String NSValue = (String) matchLabels.get(NSkey);
-										inPolicy.getNsSelector().put(NSkey, NSValue);
+										inFilter.getNsSelector().put(NSkey, NSValue);
 									}
 								}
 							} else if (key.equals("podSelector")) { // sepc.ingress.from.podSelector
 								LinkedHashMap podSelector = (LinkedHashMap) fromItem.get("podSelector");
-								inPolicy.setHavePodSelector(true);
+								inFilter.setHavePodSelector(true);
 								if (podSelector.get("matchLabels") != null) { // spec.ingress.from.podSelector.matchLabels
 									LinkedHashMap matchLabels = (LinkedHashMap) podSelector.get("matchLabels");
 									for (Object PodkeyObject : matchLabels.keySet()) {
 										String Podkey = (String) PodkeyObject;
 										String PodValue = (String) matchLabels.get(Podkey);
-										inPolicy.getPodSelector().put(Podkey, PodValue);
+										inFilter.getPodSelector().put(Podkey, PodValue);
 									}
 								}
 							}
-
 						}
+						inPolicy.addToFilters(inFilter);
 					}
 				}
 				if (ingress.get("ports") != null) { // spec.ingress.ports
@@ -157,9 +158,10 @@ public class myYaml{
 						}else {
 							Port.setProtocol("TCP");
 						}
-						inPolicy.getPorts().add(Port);
+						inPolicy.addToPorts(Port);
 					}
 				}
+				result.addToIn(inPolicy);
 			}
 		}
 		if (spec.get("egress") != null) { // spec.egress
@@ -168,52 +170,54 @@ public class myYaml{
 				result.setHaveE(true);
 			}
 			for (int egressIndex = 0; egressIndex < egressArray.size(); egressIndex++) {
+				policy ePolicy = new policy();
 				LinkedHashMap egress = (LinkedHashMap) egressArray.get(egressIndex);
 				if (egress.get("to") != null) { // spec.egress.from
 					ArrayList to = (ArrayList) egress.get("to");
 					for (int i = 0; i < to.size(); i++) {
 						LinkedHashMap toItem = (LinkedHashMap) to.get(i);
+						filter eFilter = new filter(false);
 						for (Object keyObject : toItem.keySet()) {
 							String key = (String) keyObject;
-							policy ePolicy = new policy(false);
 							if (key.equals("ipBlock")) { // spec.egress.to.ipBlock
 								LinkedHashMap ipBlock = (LinkedHashMap) toItem.get(key);
-								ePolicy.setHaveCidr(true);
+								eFilter.setHaveCidr(true);
 								if (ipBlock.get("cidr") != null) { // spec.egress.to.ipBlock.cidr
 									String cidr = (String) ipBlock.get("cidr");
-									ePolicy.getCidr().add(cidr);
+									eFilter.getCidr().add(cidr);
 								}
 								if (ipBlock.get("except") != null) { // spec.egress.to.ipBlock.except
 									ArrayList except = (ArrayList) ipBlock.get("except");
 									for (int j = 0; j < except.size(); j++) {
 										String expectItem = (String) except.get(j);
-										ePolicy.getExcept().add(expectItem);
+										eFilter.getExcept().add(expectItem);
 									}
 								}
 							} else if (key.equals("namespaceSelector")) { // spec.egress.to.namespaceSelector
 								LinkedHashMap namespaceSelector = (LinkedHashMap) toItem.get("namespaceSelector");
-								ePolicy.setHaveNsSelector(true);
+								eFilter.setHaveNsSelector(true);
 								if (namespaceSelector.get("matchLabels") != null) { // spec.egress.to.namespaceSelector.matchLabels
 									LinkedHashMap matchLabels = (LinkedHashMap) namespaceSelector.get("matchLabels");
 									for (Object NSkeyObject : matchLabels.keySet()) {
 										String NSkey = (String) NSkeyObject;
 										String NSValue = (String) matchLabels.get(NSkey);
-										ePolicy.getNsSelector().put(NSkey, NSValue);
+										eFilter.getNsSelector().put(NSkey, NSValue);
 									}
 								}
 							} else if (key.equals("podSelector")) { // sepc.egress.to.podSelector
 								LinkedHashMap podSelector = (LinkedHashMap) toItem.get("podSelector");
-								ePolicy.setHavePodSelector(true);
+								eFilter.setHavePodSelector(true);
 								if (podSelector.get("matchLabels") != null) { // spec.egress.to.podSelector.matchLabels
 									LinkedHashMap matchLabels = (LinkedHashMap) podSelector.get("matchLabels");
 									for (Object PodkeyObject : matchLabels.keySet()) {
 										String Podkey = (String) PodkeyObject;
 										String PodValue = (String) matchLabels.get(Podkey);
-										ePolicy.getPodSelector().put(Podkey, PodValue);
+										eFilter.getPodSelector().put(Podkey, PodValue);
 									}
 								}
 							}
 						}
+						ePolicy.addToFilters(eFilter);
 					}
 				}
 				if (egress.get("ports") != null) { // spec.egress.ports
@@ -231,30 +235,21 @@ public class myYaml{
 						}else {
 							Port.setProtocol("TCP");
 						}
-						ePolicy.getPorts().add(Port);
+						ePolicy.addToPorts(Port);
 					}
 				}
+				result.addToE(ePolicy);
 			}
 		}
 		if(spec.get("podSelector") != null) { // spec.podSelector
 			LinkedHashMap podSelector = (LinkedHashMap) spec.get("podSelector");
 			if(podSelector.isEmpty()) {
-				if(result.isHaveIn()) {
-					inPolicy.setAllPods(true);
-				}
-				if(result.isHaveE()) {
-					ePolicy.setAllPods(true);
-				}
+				result.setAllPods(true);
 			}else {
 				if(podSelector.get("matchLabels") != null) { // spec.podSelector.matchLabels
 					LinkedHashMap matchLabels = (LinkedHashMap) podSelector.get("matchLabels");
 					for(Object key: matchLabels.keySet()) {
-						if(result.isHaveIn()) {
-							inPolicy.getPods().put((String)key, (String)matchLabels.get((String)key));
-						}
-						if(result.isHaveE()) {
-							inPolicy.getPods().put((String)key, (String)matchLabels.get((String)key));
-						}
+						result.putToPods((String)key, (String)matchLabels.get((String)key));
 					}
 				}else {
 					// TODO error, no matchLabels
@@ -267,31 +262,13 @@ public class myYaml{
 		// metadata
 		LinkedHashMap metadata = (LinkedHashMap) content.get("metadata");
 		if (metadata.get("name") != null) { // metadata.name
-			if (result.isHaveIn()) {
-				inPolicy.setName((String) metadata.get("name"));
-			}
-			if (result.isHaveE()) {
-				ePolicy.setName((String) metadata.get("name"));
-			}
+			result.setName((String) metadata.get("name"));
 		}
 		if (metadata.get("namespace") != null) { // metadata.namespace
-			if (result.isHaveIn()) {
-				inPolicy.setNamespace((String) metadata.get("namespace"));
-			}
-			if (result.isHaveE()) {
-				ePolicy.setNamespace((String) metadata.get("namespace"));
-			}
+			result.setNamespace((String) metadata.get("namespace"));
 		} else {
-			if (result.isHaveIn()) {
-				inPolicy.setNamespace("default");
-			}
-			if (result.isHaveE()) {
-				ePolicy.setNamespace("default");
-			}
+			result.setNamespace((String) metadata.get("default"));
 		}
-
-		result.setInPolicy(inPolicy);
-		result.setePolicy(ePolicy);
 		return result;
 	}
 	
