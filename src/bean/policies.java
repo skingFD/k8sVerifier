@@ -123,14 +123,61 @@ public class policies{
 		return pods.get(key);
 	}
 
-	public ArrayList<String> getAllowList(){
-		ArrayList<String> result = new ArrayList<String>();
-		
+	public ArrayList<KVPair> getAllowNSList(){
+		ArrayList<KVPair> result = new ArrayList<KVPair>();
+		for(int i = 0; i < inPolicies.size(); i++) {
+			for(int j = 0; j < inPolicies.get(i).getFilters().size(); j++) {
+				for(String key:inPolicies.get(i).getFromFilters(j).getNsSelector().keySet()) {
+					result.add(new KVPair(key,inPolicies.get(i).getFromFilters(j).getNsSelector().get(key)));
+				}
+			}
+		}
+		for(int i = 0; i < ePolicies.size(); i++) {
+			for(int j = 0; j < ePolicies.get(i).getFilters().size(); j++) {
+				for(String key:ePolicies.get(i).getFromFilters(j).getNsSelector().keySet()) {
+					result.add(new KVPair(key,ePolicies.get(i).getFromFilters(j).getNsSelector().get(key)));
+				}
+			}
+		}
 		return result;
 	}
 	
-	public ArrayList<String> getSelectorList(){	
+	public ArrayList<KVPair> getAllowPodList(){
+		ArrayList<KVPair> result = new ArrayList<KVPair>();
+		for(int i = 0; i < inPolicies.size(); i++) {
+			for(int j = 0; j < inPolicies.get(i).getFilters().size(); j++) {
+				for(String key:inPolicies.get(i).getFromFilters(j).getPodSelector().keySet()) {
+					result.add(new KVPair(key,inPolicies.get(i).getFromFilters(j).getPodSelector().get(key)));
+				}
+			}
+		}
+		for(int i = 0; i < ePolicies.size(); i++) {
+			for(int j = 0; j < ePolicies.get(i).getFilters().size(); j++) {
+				for(String key:ePolicies.get(i).getFromFilters(j).getPodSelector().keySet()) {
+					result.add(new KVPair(key,ePolicies.get(i).getFromFilters(j).getPodSelector().get(key)));
+				}
+			}
+		}
+		return result;
+	}
+	
+	public ArrayList<String> getAllowIPList(){
 		ArrayList<String> result = new ArrayList<String>();
+		//TODO design a representation of ipBlock
+		return result;
+	}
+	
+	public ArrayList<KVPair> getSelectorNSList(){
+		ArrayList<KVPair> result = new ArrayList<KVPair>();
+		result.add(new KVPair("name",namespace));
+		return result;
+	}
+	
+	public ArrayList<KVPair> getSelectorPodList(){
+		ArrayList<KVPair> result = new ArrayList<KVPair>();
+		for(String key: pods.keySet()) {
+			result.add(new KVPair(key,pods.get(key)));
+		}
 		return result;
 	}
 }
