@@ -10,18 +10,18 @@ import java.util.Map;
 
 import org.yaml.snakeyaml.Yaml;
 
-public class myYaml{
+public class policyYaml{
 	public Yaml yaml;
 	public LinkedHashMap content;
 	public String yamlString;
 	
-	public myYaml() {
+	public policyYaml() {
 		this.yaml = new Yaml();
 		this.content = new LinkedHashMap();
 		this.yamlString = yaml.dump(content);
 	}
 	
-	public myYaml(String FilePath) {
+	public policyYaml(String FilePath) {
 		this.yaml = new Yaml();
 		File f = new File(FilePath);
 		try {
@@ -96,7 +96,7 @@ public class myYaml{
 		if (metadata.get("namespace") != null) { // metadata.namespace
 			result.setNamespace((String) metadata.get("namespace"));
 		} else {
-			result.setNamespace((String) metadata.get("default"));
+			result.setNamespace("default");
 		}
 		
 		if(spec.get("ingress") != null) { // spec.ingress

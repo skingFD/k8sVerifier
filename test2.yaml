@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test1b
+  labels:
+    name: test1b
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: test1
+  template:
+    metadata:
+      labels:
+        name: test1
+        role: test1
+    spec:
+      containers:
+      - name: myweb
+        image: tomcat:8.5-jre8
+        ports:
+        - containerPort: 80

@@ -1,21 +1,26 @@
 package analyzer;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 
 import bean.KVPair;
-import bean.myYaml;
+import bean.namespace;
+import bean.pod;
+import bean.policyYaml;
 import bean.policies;
 
 //KV: Key-Value pair
 //BV: BitVector
 public class BVgenerator{
-	ArrayList<myYaml> YamlList; 
+	ArrayList<policyYaml> YamlList; 
 	ArrayList<policies> Policies;
 	ArrayList<KVPair> SelectorNSList;//store the corresponding relationship between KV pair and BitVector
 	ArrayList<KVPair> SelectorPodList;
 	ArrayList<KVPair> AllowNSList;
 	ArrayList<KVPair> AllowPodList;
 	ArrayList<String> AllowIPList;
+	ArrayList<pod> Pods;
+	ArrayList<namespace> Namespaces;
 	int SelectorNSLength;
 	int SelectorPodLength;
 	int AllowNSLength;
@@ -23,13 +28,15 @@ public class BVgenerator{
 	int AllowIPLength;
 	
 	public BVgenerator() {
-		YamlList = new ArrayList<myYaml>();
+		YamlList = new ArrayList<policyYaml>();
 		Policies = new ArrayList<policies>();
 		SelectorNSList = new ArrayList<KVPair>();
 		SelectorPodList = new ArrayList<KVPair>();
 		AllowNSList = new ArrayList<KVPair>();
 		AllowPodList = new ArrayList<KVPair>();
 		AllowIPList = new ArrayList<String>();
+		Pods = new ArrayList<pod>();
+		Namespaces = new ArrayList<namespace>();
 		SelectorNSLength = 0;
 		SelectorPodLength = 0;
 		AllowNSLength = 0;
@@ -37,7 +44,7 @@ public class BVgenerator{
 		AllowIPLength = 0;
 	}
 	
-	public BVgenerator(ArrayList<myYaml> YamlList) {
+	public BVgenerator(ArrayList<policyYaml> YamlList) {
 		this.YamlList = YamlList;
 		Policies = new ArrayList<policies>();
 		SelectorNSList = new ArrayList<KVPair>();
@@ -45,6 +52,8 @@ public class BVgenerator{
 		AllowNSList = new ArrayList<KVPair>();
 		AllowPodList = new ArrayList<KVPair>();
 		AllowIPList = new ArrayList<String>();
+		Pods = new ArrayList<pod>();
+		Namespaces = new ArrayList<namespace>();
 		SelectorNSLength = 0;
 		SelectorPodLength = 0;
 		AllowNSLength = 0;
@@ -52,19 +61,19 @@ public class BVgenerator{
 		AllowIPLength = 0;
 	}
 	
-	public ArrayList<myYaml> getYamlList() {
+	public ArrayList<policyYaml> getYamlList() {
 		return YamlList;
 	}
 
-	public void setYamlList(ArrayList<myYaml> yamlList) {
+	public void setYamlList(ArrayList<policyYaml> yamlList) {
 		YamlList = yamlList;
 	}
 	
-	public void addYaml(myYaml myyaml) {
+	public void addYaml(policyYaml myyaml) {
 		this.YamlList.add(myyaml);
 	}
 	
-	public myYaml getYaml(int i) {
+	public policyYaml getYaml(int i) {
 		return this.YamlList.get(i);
 	}
 
@@ -116,6 +125,22 @@ public class BVgenerator{
 		AllowIPList = allowIPList;
 	}
 
+	public ArrayList<pod> getPods() {
+		return Pods;
+	}
+
+	public void setPods(ArrayList<pod> pods) {
+		Pods = pods;
+	}
+
+	public ArrayList<namespace> getNamespaces() {
+		return Namespaces;
+	}
+
+	public void setNamespaces(ArrayList<namespace> namespaces) {
+		Namespaces = namespaces;
+	}
+
 	public int getSelectorNSLength() {
 		return SelectorNSLength;
 	}
@@ -158,7 +183,7 @@ public class BVgenerator{
 
 	public void yaml2Policies(){
 		for(int i = 0; i < YamlList.size(); i++) {
-			myYaml test = YamlList.get(i);
+			policyYaml test = YamlList.get(i);
 			Policies.add(test.getPolicies());
 		}
 	}
@@ -201,9 +226,43 @@ public class BVgenerator{
 		AllowPodLength = AllowPodList.size();
 	}
 	
+	public void CalculatePods() {
+		for(int i = 0; i < Pods.size(); i++) {
+			pod Pod = Pods.get(i);
+			
+			//calculate SelectorNS
+			BitSet SelectorNS = new BitSet(SelectorNSLength);
+			if(SelectorNSList.contains(new KVPair("name",Pod.getNamespace()))) {
+				SelectorNS.set(SelectorNSList.indexOf(new KVPair("name",Pod.getNamespace())));
+			}
+			Pods.get(i).setSelectorNS(SelectorNS);
+			
+			//calculate SelectorPod
+			BitSet SelectorPod = new BitSet(SelectorPodLength);
+			for(int j = 0; j < Pod.getLabels().size(); j++) {
+				if(SelectorPodList.contains(Pod.getLabel(j))) {
+					SelectorPod.set(SelectorPodList.indexOf(Pod.getLabel(j)));
+				}
+			}
+			Pods.get(i).setSelectorPod(SelectorPod);
+			
+			//TODO calculate AllowNS
+			//calculate AllowPod
+			BitSet AllowPod = new BitSet(AllowPodLength);
+			for(int j = 0; j < Pod.getLabels().size(); j++) {
+				if(AllowPodList.contains(Pod.getLabel(j))) {
+					AllowPod.set(AllowPodList.indexOf(Pod.getLabel(j)));
+				}
+			}
+			Pods.get(i).setSelectorPod(AllowPod);
+			
+			//TODO calculate IP
+		}
+	}
+	
 	public static void main(String args[]) {
 		BVgenerator bvg = new BVgenerator();
-		myYaml myyaml = new myYaml("test1.yaml");
+		policyYaml myyaml = new policyYaml("test1.yaml");
 		bvg.addYaml(myyaml);
 		bvg.yaml2Policies();
 		bvg.CalculateAllowBV();

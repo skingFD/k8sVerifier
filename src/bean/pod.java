@@ -1,22 +1,27 @@
 package bean;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.BitSet;
 
 public class pod{
-	String namespace;
+	String namespace;//TODO how to get the info of NS
 	String name;
-	String IP;
-	Map labels;
+	String IP;//TODO how to calculate IP
+	int port;
+	ArrayList<KVPair> labels;
+	BitSet SelectorNS;
+	BitSet SelectorPod;
+	BitSet AllowNS;
+	BitSet AllowPod;
 	
 	public pod() {
 		namespace = "default";
 		name = "";
 		IP = "0.0.0.0";
-		labels = new HashMap<String,String>();
+		labels = new ArrayList<KVPair>();
 	}
 	
-	public pod(String namespace, String name, String IP, Map labels) {
+	public pod(String namespace, String name, String IP, ArrayList<KVPair> labels) {
 		this.namespace = namespace;
 		this.name = name;
 		this.IP = IP;
@@ -46,13 +51,60 @@ public class pod{
 	public void setIP(String iP) {
 		IP = iP;
 	}
+	
+	public int getPort() {
+		return port;
+	}
+	
+	public void setPort(int port) {
+		this.port = port;
+	}
 
-	public Map getLabels() {
+	public ArrayList<KVPair> getLabels() {
 		return labels;
 	}
 
-	public void setLabels(Map labels) {
+	public void setLabels(ArrayList<KVPair> labels) {
 		this.labels = labels;
 	}
 	
+	public BitSet getSelectorNS() {
+		return SelectorNS;
+	}
+
+	public void setSelectorNS(BitSet selectorNS) {
+		SelectorNS = selectorNS;
+	}
+
+	public BitSet getSelectorPod() {
+		return SelectorPod;
+	}
+
+	public void setSelectorPod(BitSet selectorPod) {
+		SelectorPod = selectorPod;
+	}
+
+	public BitSet getAllowNS() {
+		return AllowNS;
+	}
+
+	public void setAllowNS(BitSet allowNS) {
+		AllowNS = allowNS;
+	}
+
+	public BitSet getAllowPod() {
+		return AllowPod;
+	}
+
+	public void setAllowPod(BitSet allowPod) {
+		AllowPod = allowPod;
+	}
+
+	public void addLabel(KVPair label) {
+		this.labels.add(label);
+	}
+	
+	public KVPair getLabel(int i) {
+		return this.labels.get(i);
+	}
 }
