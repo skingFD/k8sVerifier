@@ -227,6 +227,17 @@ public class BVgenerator{
 	}
 	
 	public void CalculatePods() {
+		for(int i = 0; i < Namespaces.size(); i++) {
+			namespace NS = Namespaces.get(i);
+			//calculate AllowNS of NS
+			BitSet AllowNS = new BitSet(AllowNSLength);
+			for(int j = 0; j < NS.getLabels().size(); j++) {
+				if(AllowNSList.contains(NS.getLabel(j))) {
+					AllowNS.set(AllowNSList.indexOf(NS.getLabel(j)));
+				}
+			}
+			Namespaces.get(i).setAllowNS(AllowNS);
+		}
 		for(int i = 0; i < Pods.size(); i++) {
 			pod Pod = Pods.get(i);
 			
@@ -246,7 +257,14 @@ public class BVgenerator{
 			}
 			Pods.get(i).setSelectorPod(SelectorPod);
 			
-			//TODO calculate AllowNS
+			//calculate AllowNS
+			for(int j = 0; j < Namespaces.size(); j++) {
+				if(Namespaces.get(j).getName().equals(Pod.getName())) {
+					Pods.get(i).setAllowNS(Namespaces.get(j).getAllowNS());
+					break;
+				}
+			}
+			
 			//calculate AllowPod
 			BitSet AllowPod = new BitSet(AllowPodLength);
 			for(int j = 0; j < Pod.getLabels().size(); j++) {
