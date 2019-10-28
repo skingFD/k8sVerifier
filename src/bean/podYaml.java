@@ -74,8 +74,8 @@ public class podYaml{
 			template = (LinkedHashMap) spec.get("template");
 			if(template.get("metadata")!=null) {
 				tem_metadata = (LinkedHashMap) template.get("metadata");
-				if(metadata.get("labels")!=null) {
-					tem_labels = (LinkedHashMap) metadata.get("labels");
+				if(tem_metadata.get("labels")!=null) {
+					tem_labels = (LinkedHashMap) tem_metadata.get("labels");
 				}else {
 					System.out.println("error: no labels");
 					return null;

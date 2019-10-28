@@ -5,22 +5,26 @@ import java.util.BitSet;
 
 import bean.KVPair;
 import bean.namespace;
+import bean.nsYaml;
 import bean.pod;
+import bean.podYaml;
 import bean.policyYaml;
 import bean.policies;
 
 //KV: Key-Value pair
 //BV: BitVector
 public class BVgenerator{
-	ArrayList<policyYaml> YamlList; 
+	ArrayList<policyYaml> PolicyYamlList; 
 	ArrayList<policies> Policies;
+	ArrayList<podYaml> PodYamlList;
+	ArrayList<pod> Pods;
+	ArrayList<nsYaml> NSYamlList;
+	ArrayList<namespace> Namespaces;
 	ArrayList<KVPair> SelectorNSList;//store the corresponding relationship between KV pair and BitVector
 	ArrayList<KVPair> SelectorPodList;
 	ArrayList<KVPair> AllowNSList;
 	ArrayList<KVPair> AllowPodList;
 	ArrayList<String> AllowIPList;
-	ArrayList<pod> Pods;
-	ArrayList<namespace> Namespaces;
 	int SelectorNSLength;
 	int SelectorPodLength;
 	int AllowNSLength;
@@ -28,53 +32,46 @@ public class BVgenerator{
 	int AllowIPLength;
 	
 	public BVgenerator() {
-		YamlList = new ArrayList<policyYaml>();
+		PolicyYamlList = new ArrayList<policyYaml>();
 		Policies = new ArrayList<policies>();
+		PodYamlList = new ArrayList<podYaml>();
+		Pods = new ArrayList<pod>();
+		NSYamlList  =new ArrayList<nsYaml>();
+		Namespaces = new ArrayList<namespace>();
 		SelectorNSList = new ArrayList<KVPair>();
 		SelectorPodList = new ArrayList<KVPair>();
 		AllowNSList = new ArrayList<KVPair>();
 		AllowPodList = new ArrayList<KVPair>();
 		AllowIPList = new ArrayList<String>();
-		Pods = new ArrayList<pod>();
-		Namespaces = new ArrayList<namespace>();
 		SelectorNSLength = 0;
 		SelectorPodLength = 0;
 		AllowNSLength = 0;
 		AllowPodLength = 0;
 		AllowIPLength = 0;
-	}
-	
-	public BVgenerator(ArrayList<policyYaml> YamlList) {
-		this.YamlList = YamlList;
-		Policies = new ArrayList<policies>();
-		SelectorNSList = new ArrayList<KVPair>();
-		SelectorPodList = new ArrayList<KVPair>();
-		AllowNSList = new ArrayList<KVPair>();
-		AllowPodList = new ArrayList<KVPair>();
-		AllowIPList = new ArrayList<String>();
-		Pods = new ArrayList<pod>();
-		Namespaces = new ArrayList<namespace>();
-		SelectorNSLength = 0;
-		SelectorPodLength = 0;
-		AllowNSLength = 0;
-		AllowPodLength = 0;
-		AllowIPLength = 0;
-	}
-	
-	public ArrayList<policyYaml> getYamlList() {
-		return YamlList;
 	}
 
-	public void setYamlList(ArrayList<policyYaml> yamlList) {
-		YamlList = yamlList;
+	public ArrayList<policyYaml> getPolicyYamlList() {
+		return PolicyYamlList;
 	}
-	
-	public void addYaml(policyYaml myyaml) {
-		this.YamlList.add(myyaml);
+
+	public void setPolicyYamlList(ArrayList<policyYaml> policyYamlList) {
+		PolicyYamlList = policyYamlList;
 	}
-	
-	public policyYaml getYaml(int i) {
-		return this.YamlList.get(i);
+
+	public ArrayList<podYaml> getPodYamlList() {
+		return PodYamlList;
+	}
+
+	public void setPodYamlList(ArrayList<podYaml> podYamlList) {
+		PodYamlList = podYamlList;
+	}
+
+	public ArrayList<nsYaml> getNSYamlList() {
+		return NSYamlList;
+	}
+
+	public void setNSYamlList(ArrayList<nsYaml> nSYamlList) {
+		NSYamlList = nSYamlList;
 	}
 
 	public ArrayList<policies> getPolicies() {
@@ -182,9 +179,23 @@ public class BVgenerator{
 	}
 
 	public void yaml2Policies(){
-		for(int i = 0; i < YamlList.size(); i++) {
-			policyYaml test = YamlList.get(i);
-			Policies.add(test.getPolicies());
+		for(int i = 0; i < PolicyYamlList.size(); i++) {
+			policyYaml temp = PolicyYamlList.get(i);
+			Policies.add(temp.getPolicies());
+		}
+	}
+	
+	public void yaml2Pods() {
+		for(int i = 0; i < PodYamlList.size(); i++) {
+			podYaml temp = PodYamlList.get(i);
+			Pods.add(temp.getPod());
+		}
+	}
+	
+	public void yaml2NS() {
+		for(int i = 0; i < NSYamlList.size(); i++) {
+			nsYaml temp = NSYamlList.get(i);
+			Namespaces.add(temp.getNS());
 		}
 	}
 
@@ -279,12 +290,45 @@ public class BVgenerator{
 	}
 	
 	public static void main(String args[]) {
+		// test main function
+		// initiate BVgenerator
 		BVgenerator bvg = new BVgenerator();
-		policyYaml myyaml = new policyYaml("test1.yaml");
-		bvg.addYaml(myyaml);
+		
+		// initiate policy
+		policyYaml policyyaml = new policyYaml("testpolicy.yaml");
+		bvg.getPolicyYamlList().add(policyyaml);
+		
+		// initiate pod
+		podYaml podyaml1 = new podYaml("testdep1.yaml");
+		podYaml podyaml2 = new podYaml("testdep2.yaml");
+		bvg.getPodYamlList().add(podyaml1);
+		bvg.getPodYamlList().add(podyaml2);
+		
+		// initiate NS
+		nsYaml nsyaml1 = new nsYaml("testns1.yaml");
+		nsYaml nsyaml2 = new nsYaml("testns2.yaml");
+		bvg.getNSYamlList().add(nsyaml1);
+		bvg.getNSYamlList().add(nsyaml2);
+		
 		bvg.yaml2Policies();
-		bvg.CalculateAllowBV();
-		bvg.CalculateSelectorBV();
+		bvg.yaml2Pods();
+		bvg.yaml2NS();
+		//bvg.CalculateAllowBV();
+		//bvg.CalculateSelectorBV();
+		
+		//naive verification
+		for(int i = 0; i < bvg.Pods.size(); i++) {
+			for(int j = 0; j < bvg.Pods.size(); j++) {
+				if(i == j) {
+					continue;
+				}else {
+					pod podfrom = bvg.Pods.get(i);
+					pod podto = bvg.Pods.get(j);
+					System.out.println("from: "+ podfrom.getNamespace() + "." + podfrom.getName());
+					System.out.println("from: "+ podto.getNamespace() + "." + podto.getName());
+				}
+			}
+		}
 		System.out.print(bvg);
 	}
 }

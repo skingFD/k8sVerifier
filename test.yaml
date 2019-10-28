@@ -29,8 +29,18 @@ spec:
       port: 8080
   egress:
   - to:
+    - podSelector:
+        matchLabels:
+          role: auth
+  - to:
     - ipBlock:
         cidr: 10.0.0.0/24
+    - namespaceSelector:
+        matchLabels:
+          user: skingFD
+    - podSelector:
+        matchLabels:
+          index: '0'
     ports:
     - protocol: TCP
       port: 5978

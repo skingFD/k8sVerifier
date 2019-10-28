@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: test1b
-  labels:
-    name: test1b
+  name: test2
+  namespace: test2
 spec:
   replicas: 1
   selector:
     matchLabels:
-      name: test1
+      app: test2
+      role: test2
   template:
     metadata:
       labels:
-        name: test1
-        role: test1
+        app: test2
+        role: test2
     spec:
       containers:
       - name: myweb
