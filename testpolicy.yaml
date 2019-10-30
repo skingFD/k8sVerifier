@@ -10,7 +10,10 @@ spec:
   policyTypes:
   ingress:
   - from:
-    - podSelector:
+    - namespaceSelector:
+        matchLabels:
+          role: test1
+      podSelector:
         matchLabels:
           role: test2
     ports:

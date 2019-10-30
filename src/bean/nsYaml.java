@@ -41,12 +41,12 @@ public class nsYaml{
 		LinkedHashMap metadata = (LinkedHashMap) content.get("metadata");
 		if (metadata.get("name") != null) { // metadata.name
 			result.setName((String) metadata.get("name"));
-			result.addLabel(new KVPair("name",result.getName()));
+			result.addLabel("name",result.getName());
 		}
 		if (metadata.get("labels") != null) { // metadata.labels
 			LinkedHashMap labels = (LinkedHashMap) metadata.get("labels");
 			for(Object key: labels.keySet()) {
-				result.addLabel(new KVPair((String)key, (String)labels.get((String)key)));
+				result.addLabel((String)key, (String)labels.get((String)key));
 			}
 		}
 		return result;

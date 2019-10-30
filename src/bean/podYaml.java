@@ -102,7 +102,7 @@ public class podYaml{
 				}
 			}
 			for(KVPair kvpair: pod_labels) {
-				result.addLabel(kvpair);
+				result.addLabel(kvpair.getKey(),kvpair.getValue());
 			}
 		}
 		//port

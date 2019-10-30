@@ -1,27 +1,30 @@
 package bean;
 
-import java.util.ArrayList;
+
 import java.util.BitSet;
+import java.util.HashMap;
 
 public class pod{
 	String namespace;//TODO how to get the info of NS
 	String name;
 	String IP;//TODO how to calculate IP
 	int port;
-	ArrayList<KVPair> labels;
-	BitSet SelectorNS;
-	BitSet SelectorPod;
-	BitSet AllowNS;
-	BitSet AllowPod;
+	HashMap<String,String> labels;
+//	BitSet SelectorNS;
+//	BitSet SelectorPod;
+//	BitSet AllowNS;
+//	BitSet AllowPod;
+	BitSet AllowPodIn;
+	BitSet AllowPodE;
 	
 	public pod() {
 		namespace = "default";
 		name = "";
 		IP = "0.0.0.0";
-		labels = new ArrayList<KVPair>();
+		labels = new HashMap<String,String>();
 	}
 	
-	public pod(String namespace, String name, String IP, ArrayList<KVPair> labels) {
+	public pod(String namespace, String name, String IP, HashMap<String,String> labels) {
 		this.namespace = namespace;
 		this.name = name;
 		this.IP = IP;
@@ -60,51 +63,73 @@ public class pod{
 		this.port = port;
 	}
 
-	public ArrayList<KVPair> getLabels() {
+	public HashMap<String,String> getLabels() {
 		return labels;
 	}
 
-	public void setLabels(ArrayList<KVPair> labels) {
+	public void setLabels(HashMap<String,String> labels) {
 		this.labels = labels;
 	}
 	
-	public BitSet getSelectorNS() {
-		return SelectorNS;
-	}
-
-	public void setSelectorNS(BitSet selectorNS) {
-		SelectorNS = selectorNS;
-	}
-
-	public BitSet getSelectorPod() {
-		return SelectorPod;
-	}
-
-	public void setSelectorPod(BitSet selectorPod) {
-		SelectorPod = selectorPod;
-	}
-
-	public BitSet getAllowNS() {
-		return AllowNS;
-	}
-
-	public void setAllowNS(BitSet allowNS) {
-		AllowNS = allowNS;
-	}
-
-	public BitSet getAllowPod() {
-		return AllowPod;
-	}
-
-	public void setAllowPod(BitSet allowPod) {
-		AllowPod = allowPod;
-	}
-
-	public void addLabel(KVPair label) {
-		this.labels.add(label);
+	public void setall(int length) {
+		AllowPodIn = new BitSet(length);
+		AllowPodIn.set(0, length);
+		AllowPodE = new BitSet(length);
+		AllowPodE.set(0, length);
 	}
 	
-	public KVPair getLabel(int i) {
-		return this.labels.get(i);
+	public void clearall(int length) {
+		AllowPodIn = new BitSet(length);
+		AllowPodIn.clear(0, length);
+		AllowPodE = new BitSet(length);
+		AllowPodE.clear(0, length);
+	}
+	
+	public BitSet getAllowPodIn() {
+		return AllowPodIn;
+	}
+
+	public void setAllowPodIn(BitSet allowPodIn) {
+		AllowPodIn = allowPodIn;
+	}
+	
+	public void andAllowPodIn(BitSet allowIn) {
+		AllowPodIn.and(allowIn);
+	}
+	
+	public void orAllowPodIn(BitSet allowIn) {
+		AllowPodIn.or(allowIn);
+	}
+
+	public BitSet getAllowPodE() {
+		return AllowPodE;
+	}
+
+	public void setAllowPodE(BitSet allowPodE) {
+		AllowPodE = allowPodE;
+	}
+	
+	public void andAllowPodE(BitSet allowE) {
+		AllowPodE.and(allowE);
+	}
+	
+	public void orAllowPodE(BitSet allowE) {
+		AllowPodE.or(allowE);
+	}
+
+	public void addLabel(String Key,String Value) {
+		this.labels.put(Key, Value);
+	}
+	
+	public String getLabel(String Key) {
+		return this.labels.get(Key);
+	}
+	
+	public boolean checkAllowIn(int dest) {
+		return AllowPodIn.get(dest);
+	}
+	
+	public boolean checkAllowE(int dest) {
+		return AllowPodE.get(dest);
 	}
 }

@@ -1,6 +1,7 @@
 package bean;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.HashMap;
 
 public class policies{
@@ -12,6 +13,8 @@ public class policies{
 	HashMap<String,String> pods;
 	ArrayList<policy> inPolicies;
 	ArrayList<policy> ePolicies;
+	BitSet inAllow;
+	BitSet eAllow;
 	
 	public policies() {
 		this.haveIn = false;
@@ -22,6 +25,8 @@ public class policies{
 		this.pods = new HashMap<String,String>();
 		this.inPolicies = new ArrayList<policy>();
 		this.ePolicies = new ArrayList<policy>();
+		this.inAllow = new BitSet();
+		this.eAllow = new BitSet();
 	}
 	
 	public policies(boolean haveIn, boolean haveE, boolean allPods, String name, String namespace, HashMap<String,String> pods, ArrayList<policy> inPolicies, ArrayList<policy> ePolicies) {
@@ -33,6 +38,8 @@ public class policies{
 		this.pods = pods;
 		this.inPolicies = inPolicies;
 		this.ePolicies = ePolicies;
+		this.inAllow = new BitSet();
+		this.eAllow = new BitSet();
 	}
 	
 	public boolean isHaveIn() {
@@ -97,6 +104,22 @@ public class policies{
 
 	public void setePolicies(ArrayList<policy> ePolicies) {
 		this.ePolicies = ePolicies;
+	}
+
+	public BitSet getInAllow() {
+		return inAllow;
+	}
+
+	public void setInAllow(BitSet inAllow) {
+		this.inAllow = inAllow;
+	}
+
+	public BitSet geteAllow() {
+		return eAllow;
+	}
+
+	public void seteAllow(BitSet eAllow) {
+		this.eAllow = eAllow;
 	}
 
 	public void addToIn(policy Policy) {
@@ -179,5 +202,36 @@ public class policies{
 			result.add(new KVPair(key,pods.get(key)));
 		}
 		return result;
+	}
+	
+	public boolean selectPod(pod Pod) {
+		boolean result = false;
+		if(Pod.getNamespace().equals(namespace)) {
+			for(String Key: pods.keySet()) {
+				if(!pods.get(Key).equals(Pod.getLabels().get(Key))) {
+					return result;
+				}
+			}
+			result = true;
+		}
+		return result;
+	}
+	
+	public void calculateBitVector(int pods) {
+		if(this.haveIn) {
+			for(int i = 0; i < inPolicies.size(); i++) {
+				inAllow.or(inPolicies.get(i).getAllow());
+			}
+		}else {
+			inAllow.set(0, pods);
+		}
+		
+		if(this.haveE) {
+			for(int i = 0; i < ePolicies.size(); i++) {
+				eAllow.or(ePolicies.get(i).getAllow());
+			}
+		}else {
+			eAllow.set(0, pods);
+		}
 	}
 }

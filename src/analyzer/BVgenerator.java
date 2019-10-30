@@ -10,6 +10,7 @@ import bean.pod;
 import bean.podYaml;
 import bean.policyYaml;
 import bean.policies;
+import bean.policy;
 
 //KV: Key-Value pair
 //BV: BitVector
@@ -137,6 +138,15 @@ public class BVgenerator{
 	public void setNamespaces(ArrayList<namespace> namespaces) {
 		Namespaces = namespaces;
 	}
+	
+	public namespace getNamespace(String name) {
+		for(int i = 0; i < Namespaces.size(); i++) {
+			if(Namespaces.get(i).getName().equals(name)) {
+				return Namespaces.get(i);
+			}
+		}
+		return null;
+	}
 
 	public int getSelectorNSLength() {
 		return SelectorNSLength;
@@ -237,59 +247,65 @@ public class BVgenerator{
 		AllowPodLength = AllowPodList.size();
 	}
 	
+	public void CalculatePods0() {
+//		for(int i = 0; i < Namespaces.size(); i++) {
+//			namespace NS = Namespaces.get(i);
+//			//calculate AllowNS of NS
+//			BitSet AllowNS = new BitSet(AllowNSLength);
+//			for(int j = 0; j < NS.getLabels().size(); j++) {
+//				if(AllowNSList.contains(NS.getLabel(j))) {
+//					AllowNS.set(AllowNSList.indexOf(NS.getLabel(j)));
+//				}
+//			}
+//			Namespaces.get(i).setAllowNS(AllowNS);
+//		}
+//		for(int i = 0; i < Pods.size(); i++) {
+//			pod Pod = Pods.get(i);
+//			
+//			//calculate SelectorNS
+//			BitSet SelectorNS = new BitSet(SelectorNSLength);
+//			if(SelectorNSList.contains(new KVPair("name",Pod.getNamespace()))) {
+//				SelectorNS.set(SelectorNSList.indexOf(new KVPair("name",Pod.getNamespace())));
+//			}
+//			Pods.get(i).setSelectorNS(SelectorNS);
+//			
+//			//calculate SelectorPod
+//			BitSet SelectorPod = new BitSet(SelectorPodLength);
+//			for(int j = 0; j < Pod.getLabels().size(); j++) {
+//				if(SelectorPodList.contains(Pod.getLabel(j))) {
+//					SelectorPod.set(SelectorPodList.indexOf(Pod.getLabel(j)));
+//				}
+//			}
+//			Pods.get(i).setSelectorPod(SelectorPod);
+//			
+//			//calculate AllowNS
+//			for(int j = 0; j < Namespaces.size(); j++) {
+//				if(Namespaces.get(j).getName().equals(Pod.getName())) {
+//					Pods.get(i).setAllowNS(Namespaces.get(j).getAllowNS());
+//					break;
+//				}
+//			}
+//			
+//			//calculate AllowPod
+//			BitSet AllowPod = new BitSet(AllowPodLength);
+//			for(int j = 0; j < Pod.getLabels().size(); j++) {
+//				if(AllowPodList.contains(Pod.getLabel(j))) {
+//					AllowPod.set(AllowPodList.indexOf(Pod.getLabel(j)));
+//				}
+//			}
+//			Pods.get(i).setSelectorPod(AllowPod);
+//			
+//			//TODO calculate IP
+//		}
+	}
+	
 	public void CalculatePods() {
-		for(int i = 0; i < Namespaces.size(); i++) {
-			namespace NS = Namespaces.get(i);
-			//calculate AllowNS of NS
-			BitSet AllowNS = new BitSet(AllowNSLength);
-			for(int j = 0; j < NS.getLabels().size(); j++) {
-				if(AllowNSList.contains(NS.getLabel(j))) {
-					AllowNS.set(AllowNSList.indexOf(NS.getLabel(j)));
-				}
-			}
-			Namespaces.get(i).setAllowNS(AllowNS);
-		}
-		for(int i = 0; i < Pods.size(); i++) {
-			pod Pod = Pods.get(i);
+		for(policies tempPolicy: Policies) {
 			
-			//calculate SelectorNS
-			BitSet SelectorNS = new BitSet(SelectorNSLength);
-			if(SelectorNSList.contains(new KVPair("name",Pod.getNamespace()))) {
-				SelectorNS.set(SelectorNSList.indexOf(new KVPair("name",Pod.getNamespace())));
-			}
-			Pods.get(i).setSelectorNS(SelectorNS);
-			
-			//calculate SelectorPod
-			BitSet SelectorPod = new BitSet(SelectorPodLength);
-			for(int j = 0; j < Pod.getLabels().size(); j++) {
-				if(SelectorPodList.contains(Pod.getLabel(j))) {
-					SelectorPod.set(SelectorPodList.indexOf(Pod.getLabel(j)));
-				}
-			}
-			Pods.get(i).setSelectorPod(SelectorPod);
-			
-			//calculate AllowNS
-			for(int j = 0; j < Namespaces.size(); j++) {
-				if(Namespaces.get(j).getName().equals(Pod.getName())) {
-					Pods.get(i).setAllowNS(Namespaces.get(j).getAllowNS());
-					break;
-				}
-			}
-			
-			//calculate AllowPod
-			BitSet AllowPod = new BitSet(AllowPodLength);
-			for(int j = 0; j < Pod.getLabels().size(); j++) {
-				if(AllowPodList.contains(Pod.getLabel(j))) {
-					AllowPod.set(AllowPodList.indexOf(Pod.getLabel(j)));
-				}
-			}
-			Pods.get(i).setSelectorPod(AllowPod);
-			
-			//TODO calculate IP
 		}
 	}
 	
-	public static void main(String args[]) {
+	public static void main(String args[]) {		
 		// test main function
 		// initiate BVgenerator
 		BVgenerator bvg = new BVgenerator();
@@ -317,16 +333,48 @@ public class BVgenerator{
 		//bvg.CalculateSelectorBV();
 		
 		//naive verification
+		for(int i = 0; i < bvg.getPods().size(); i++) {
+			bvg.getPods().get(i).setall(bvg.getPods().size());
+		}
+		for(int i = 0; i < bvg.getPolicies().size(); i++) {
+			for(int j = 0; j < bvg.getPolicies().get(i).getInPolicies().size(); j++) {
+				policy inPolicy = bvg.getPolicies().get(i).getInPolicies().get(j);
+				for(int k = 0; k < bvg.getPods().size(); k++) {
+					namespace NS = bvg.getNamespace(bvg.getPods().get(k).getName());
+					inPolicy.calculateAllow(k, bvg.getPods().get(k), NS);
+				}
+			}
+			for(int j = 0; j < bvg.getPolicies().get(i).getePolicies().size(); j++) {
+				policy ePolicy = bvg.getPolicies().get(i).getePolicies().get(j);
+				for(int k = 0; k < bvg.getPods().size(); k++) {
+					namespace NS = bvg.getNamespace(bvg.getPods().get(k).getName());
+					ePolicy.calculateAllow(k, bvg.getPods().get(k), NS);
+				}
+			}
+			bvg.getPolicies().get(i).calculateBitVector(bvg.getPods().size());
+		}
+		
+		for(int i = 0; i < bvg.getPods().size(); i++) {
+			boolean first = true;
+			for(int j = 0; j < bvg.getPolicies().size(); j++) {
+				if(bvg.getPolicies().get(j).selectPod(bvg.getPods().get(i))) {
+					if(first) {
+						bvg.getPods().get(i).clearall(bvg.getPods().size());
+						first = false;
+					}
+					bvg.getPods().get(i).orAllowPodIn(bvg.getPolicies().get(j).getInAllow());
+					bvg.getPods().get(i).orAllowPodE(bvg.getPolicies().get(j).geteAllow());
+				}
+			}
+		}
+		
 		for(int i = 0; i < bvg.Pods.size(); i++) {
 			for(int j = 0; j < bvg.Pods.size(); j++) {
-				if(i == j) {
-					continue;
-				}else {
-					pod podfrom = bvg.Pods.get(i);
-					pod podto = bvg.Pods.get(j);
-					System.out.println("from: "+ podfrom.getNamespace() + "." + podfrom.getName());
-					System.out.println("from: "+ podto.getNamespace() + "." + podto.getName());
-				}
+				pod podfrom = bvg.Pods.get(i);
+				pod podto = bvg.Pods.get(j);
+				System.out.println("from: "+ podfrom.getNamespace() + "." + podfrom.getName());
+				System.out.println("to: "+ podto.getNamespace() + "." + podto.getName());
+				System.out.println(podfrom.checkAllowE(j)&&podto.checkAllowIn(i));
 			}
 		}
 		System.out.print(bvg);

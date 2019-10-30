@@ -1,22 +1,22 @@
 package bean;
 
-import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.HashMap;
 
 public class namespace{
 	String name;
-	ArrayList<KVPair> labels;
+	HashMap<String,String> labels;
 	BitSet allowNS;
 	
 	public namespace() {
 		name = "";
-		labels = new ArrayList<KVPair>();
+		labels = new HashMap<String,String>();
 		allowNS = new BitSet();
 	}
 	
 	public namespace(String name) {
 		this.name = name;
-		labels = new ArrayList<KVPair>();
+		labels = new HashMap<String,String>();
 		allowNS = new BitSet();
 	}
 	
@@ -26,10 +26,10 @@ public class namespace{
 	public void setName(String name) {
 		this.name = name;
 	}
-	public ArrayList<KVPair> getLabels() {
+	public HashMap<String,String> getLabels() {
 		return labels;
 	}
-	public void setLabels(ArrayList<KVPair> labels) {
+	public void setLabels(HashMap<String,String> labels) {
 		this.labels = labels;
 	}
 	public BitSet getAllowNS() {
@@ -38,10 +38,10 @@ public class namespace{
 	public void setAllowNS(BitSet allowNS) {
 		this.allowNS = allowNS;
 	}
-	public void addLabel(KVPair label) {
-		labels.add(label);
+	public void addLabel(String Key, String Value) {
+		labels.put(Key, Value);
 	}
-	public KVPair getLabel(int i) {
-		return labels.get(i);
+	public String getLabel(String Key) {
+		return labels.get(Key);
 	}
 }
