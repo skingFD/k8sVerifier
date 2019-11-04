@@ -12,10 +12,14 @@ spec:
   - from:
     - namespaceSelector:
         matchLabels:
-          role: test1
+          role: test2
       podSelector:
         matchLabels:
           role: test2
+      ipBlock:
+        cidr: 192.168.16.148/31
+        except:
+        - 192.168.16.149/32
     ports:
     - protocol: TCP
       port: 8080
