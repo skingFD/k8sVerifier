@@ -2,13 +2,16 @@ package bean;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-
+/**
+ * @author skingFD
+ * filter for BV generator
+ */
 public class filter{
 	boolean inout; //0:ingress, 1:egress
 	boolean haveCidr;
 	boolean haveNsSelector;
 	boolean havePodSelector;
-	ArrayList<String> cidr; // spec.ingress.from.ipblock.cidr
+	String cidr; // spec.ingress.from.ipblock.cidr
 	ArrayList<String> except; // spec.ingress.from.ipblock.except
 	HashMap<String,String> nsSelector; // spec.ingress.from.nsSelector spec.egress.to.nsSelector
 	HashMap<String,String> podSelector; // spec.ingress.from.podSelector spec.egress.to.podSelector
@@ -18,7 +21,7 @@ public class filter{
 		this.haveCidr = false;
 		this.haveNsSelector = false;
 		this.havePodSelector = false;
-		this.cidr = new ArrayList<String>();
+		this.cidr = "";
 		this.except = new ArrayList<String>();
 		this.nsSelector = new HashMap<String,String>();
 		this.podSelector = new HashMap<String,String>();
@@ -29,7 +32,7 @@ public class filter{
 		this.haveCidr = false;
 		this.haveNsSelector = false;
 		this.havePodSelector = false;
-		this.cidr = new ArrayList<String>();
+		this.cidr = "";
 		this.except = new ArrayList<String>();
 		this.nsSelector = new HashMap<String,String>();
 		this.podSelector = new HashMap<String,String>();
@@ -67,11 +70,11 @@ public class filter{
 		this.havePodSelector = havePodSelector;
 	}
 
-	public ArrayList<String> getCidr() {
+	public String getCidr() {
 		return cidr;
 	}
 
-	public void setCidr(ArrayList<String> cidr) {
+	public void setCidr(String cidr) {
 		this.cidr = cidr;
 	}
 

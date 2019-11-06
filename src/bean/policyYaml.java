@@ -32,6 +32,12 @@ public class policyYaml{
 		this.yamlString = yaml.dump(content);
 	}
 	
+	public policyYaml(LinkedHashMap content) {
+		this.yaml = new Yaml();
+		this.content = content;
+		this.yamlString = yaml.dump(content);
+	}
+	
 	public String getYamlDump() {
 		this.yamlString = yaml.dump(content);
 		return this.yamlString;
@@ -119,7 +125,7 @@ public class policyYaml{
 								inFilter.setHaveCidr(true);
 								if (ipBlock.get("cidr") != null) { // spec.ingress.from.ipBlock.cidr
 									String cidr = (String) ipBlock.get("cidr");
-									inFilter.getCidr().add(cidr);
+									inFilter.setCidr(cidr);
 								}
 								if (ipBlock.get("except") != null) { // spec.ingress.from.ipBlock.except
 									ArrayList except = (ArrayList) ipBlock.get("except");
@@ -200,7 +206,7 @@ public class policyYaml{
 								eFilter.setHaveCidr(true);
 								if (ipBlock.get("cidr") != null) { // spec.egress.to.ipBlock.cidr
 									String cidr = (String) ipBlock.get("cidr");
-									eFilter.getCidr().add(cidr);
+									eFilter.setCidr(cidr);
 								}
 								if (ipBlock.get("except") != null) { // spec.egress.to.ipBlock.except
 									ArrayList except = (ArrayList) ipBlock.get("except");

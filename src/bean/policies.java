@@ -3,7 +3,12 @@ package bean;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
+/**
+ * @author skingFD
+ * policies for BV generator, contains inPolicies, ePolicies
+ */
 public class policies{
 	boolean haveIn;
 	boolean haveE;
@@ -233,5 +238,158 @@ public class policies{
 		}else {
 			eAllow.set(0, pods);
 		}
+	}
+	
+	/**
+	 * generate Yaml from policies
+	 * @return generated Yaml
+	 */
+	public policyYaml generateYaml() {
+		LinkedHashMap result = new LinkedHashMap();
+		//apiVersion and kind
+		result.put("apiVersion", "networking.k8s.io/v1");
+		result.put("kind", "NetworkPolicy");
+		//metadata
+		LinkedHashMap metadata = new LinkedHashMap();
+		metadata.put("name", name);
+		metadata.put("namespace", namespace);
+		
+		
+		//spec
+		LinkedHashMap spec = new LinkedHashMap();
+		//spec.podSelector
+		LinkedHashMap podSelector = new LinkedHashMap();
+		//spec.podSelector.matchLabels
+		LinkedHashMap selectorLabels = new LinkedHashMap();
+		for(String key: pods.keySet()) {
+			selectorLabels.put(key, pods.get(key));
+		}
+		podSelector.put("matchLabels", selectorLabels);
+		//spec.policyTypes
+		ArrayList policyTypes = new ArrayList();
+		if(haveIn) {
+			policyTypes.add("Ingress");
+		}
+		if(haveE) {
+			policyTypes.add("Egress");
+		}
+		//spec.ingress
+		ArrayList ingress = new ArrayList();
+		for(int i = 0; i< inPolicies.size(); i++) {
+			LinkedHashMap ingressItem = new LinkedHashMap();
+			ArrayList from = new ArrayList();
+			ArrayList ports = new ArrayList();
+			for(int j = 0; j< inPolicies.get(i).getFilters().size(); j++) {
+				LinkedHashMap fromItem = new LinkedHashMap();
+				if(inPolicies.get(i).getFilters().get(j).isHaveNsSelector()) { // If have namespaceSelector
+					LinkedHashMap NSAllow = new LinkedHashMap(); 
+					LinkedHashMap Labels = new LinkedHashMap();
+					for(String key: inPolicies.get(i).getFilters().get(j).getNsSelector().keySet()) {
+						Labels.put(key, inPolicies.get(i).getFilters().get(j).getNsSelector().get(key));
+					}
+					NSAllow.put("matchLabels", Labels);
+					fromItem.put("namespaceSelector", NSAllow);
+				}
+				if(inPolicies.get(i).getFilters().get(j).isHavePodSelector()) { // If have podSelector
+					LinkedHashMap PodAllow = new LinkedHashMap();
+					LinkedHashMap Labels = new LinkedHashMap();
+					for(String key: inPolicies.get(i).getFilters().get(j).getPodSelector().keySet()) {
+						Labels.put(key, inPolicies.get(i).getFilters().get(j).getPodSelector().get(key));
+					}
+					PodAllow.put("matchLabels", Labels);
+					fromItem.put("podSelector", PodAllow);
+				}
+				if(inPolicies.get(i).getFilters().get(j).isHaveCidr()) { // If have cidr
+					LinkedHashMap ipBlock = new LinkedHashMap();
+					ipBlock.put("cidr", inPolicies.get(i).getFilters().get(j).getCidr());
+					ArrayList excepts = new ArrayList();
+					for(String except: inPolicies.get(i).getFilters().get(j).getExcept()) {
+						excepts.add(except);
+					}
+					ipBlock.put("except", excepts);
+					fromItem.put("ipBlock", ipBlock);
+				}
+				from.add(fromItem);
+			}
+			for(int j = 0; j<inPolicies.get(i).getPorts().size(); j++) {
+				LinkedHashMap portItem = new LinkedHashMap();
+				portItem.put("protocol", inPolicies.get(i).getPorts().get(j).getProtocol());
+				portItem.put("port", inPolicies.get(i).getPorts().get(j).getPort());
+				ports.add(portItem);
+			}
+			ingressItem.put("from", from);
+			ingressItem.put("ports", ports);
+			ingress.add(ingressItem);
+		}
+		
+		//spec.egress
+		ArrayList egress = new ArrayList();
+		for(int i = 0; i < ePolicies.size(); i++) {
+			LinkedHashMap egressItem = new LinkedHashMap();
+			ArrayList to = new ArrayList();
+			ArrayList ports = new ArrayList();
+			for(int j = 0; j< ePolicies.get(i).getFilters().size(); j++) {
+				LinkedHashMap toItem = new LinkedHashMap();
+				if(ePolicies.get(i).getFilters().get(j).isHaveNsSelector()) { // If have namespaceSelector
+					LinkedHashMap NSAllow = new LinkedHashMap(); 
+					LinkedHashMap Labels = new LinkedHashMap();
+					for(String key: ePolicies.get(i).getFilters().get(j).getNsSelector().keySet()) {
+						Labels.put(key, ePolicies.get(i).getFilters().get(j).getNsSelector().get(key));
+					}
+					NSAllow.put("matchLabels", Labels);
+					toItem.put("namespaceSelector", NSAllow);
+				}
+				if(ePolicies.get(i).getFilters().get(j).isHavePodSelector()) { // If have podSelector
+					LinkedHashMap PodAllow = new LinkedHashMap();
+					LinkedHashMap Labels = new LinkedHashMap();
+					for(String key: ePolicies.get(i).getFilters().get(j).getPodSelector().keySet()) {
+						Labels.put(key, ePolicies.get(i).getFilters().get(j).getPodSelector().get(key));
+					}
+					PodAllow.put("matchLabels", Labels);
+					toItem.put("podSelector", PodAllow);
+				}
+				if(ePolicies.get(i).getFilters().get(j).isHaveCidr()) { // If have cidr
+					LinkedHashMap ipBlock = new LinkedHashMap();
+					ipBlock.put("cidr", ePolicies.get(i).getFilters().get(j).getCidr());
+					ArrayList excepts = new ArrayList();
+					for(String except: ePolicies.get(i).getFilters().get(j).getExcept()) {
+						excepts.add(except);
+					}
+					ipBlock.put("except", excepts);
+					toItem.put("ipBlock", ipBlock);
+				}
+				to.add(toItem);
+			}
+			for(int j = 0; j<ePolicies.get(i).getPorts().size(); j++) {
+				LinkedHashMap portItem = new LinkedHashMap();
+				portItem.put("protocol", ePolicies.get(i).getPorts().get(j).getProtocol());
+				portItem.put("port", ePolicies.get(i).getPorts().get(j).getPort());
+				ports.add(portItem);
+			}
+			egressItem.put("to", to);
+			egressItem.put("ports", ports);
+			egress.add(egressItem);
+		}
+		
+		// package spec
+		spec.put("podSelector", podSelector);
+		spec.put("policyTypes", policyTypes);
+		spec.put("ingress", ingress);
+		spec.put("egress", egress);
+		
+		// package result
+		result.put("metadata", metadata);
+		result.put("spec", spec);
+		
+		return new policyYaml(result);
+	}
+
+	public static void main(String args[]) {
+		//for test
+		policyYaml inputYaml = new policyYaml("test.yaml");
+		policies test = inputYaml.getPolicies();
+		policyYaml outputYaml = test.generateYaml();
+		String yamlString = outputYaml.getYamlDump();
+		System.out.println(yamlString);
 	}
 }

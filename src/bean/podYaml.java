@@ -130,6 +130,82 @@ public class podYaml{
 		return result;
 	}
 	
+	public void addLabels(ArrayList<KVPair> labels) {
+		LinkedHashMap result = new LinkedHashMap();
+		// apiVersion and kind
+		result.put("apiVersion", (String) content.get("apiVersion"));
+		result.put("kind", (String) content.get("kind"));
+		// metadata
+		LinkedHashMap metadata = (LinkedHashMap) content.get("metadata");
+		result.put("metadata", metadata);
+		//spec
+		LinkedHashMap new_spec = new LinkedHashMap();
+		LinkedHashMap new_selector = new LinkedHashMap();
+		LinkedHashMap new_selector_matchLabels = new LinkedHashMap();
+		LinkedHashMap new_template = new LinkedHashMap();
+		LinkedHashMap new_template_metadata = new LinkedHashMap();
+		LinkedHashMap new_template_metadata_labels = new LinkedHashMap();
+		
+		LinkedHashMap spec = (LinkedHashMap) content.get("spec");
+		LinkedHashMap selector = null;
+		LinkedHashMap matchLabels = null;
+		LinkedHashMap template = null;
+		LinkedHashMap tem_metadata = null;
+		LinkedHashMap tem_labels = null;
+		LinkedHashMap tem_spec = null;
+		ArrayList<KVPair> pod_labels = new ArrayList<KVPair>();
+		if(spec.get("selector")!=null) {
+			selector = (LinkedHashMap) spec.get("selector");
+			if(selector.get("matchLabels")!=null) {
+				matchLabels = (LinkedHashMap) selector.get("matchLabels");
+				for(Object key: matchLabels.keySet()) {
+					new_selector_matchLabels.put(key, matchLabels.get(key));
+				}
+			}else {
+				System.out.println("error: no matchLabels");
+			}
+		}else {
+			System.out.println("error: no selector");
+		}
+		if(spec.get("template")!=null) {
+			template = (LinkedHashMap) spec.get("template");
+			if(template.get("metadata")!=null) {
+				tem_metadata = (LinkedHashMap) template.get("metadata");
+				if(tem_metadata.get("labels")!=null) {
+					tem_labels = (LinkedHashMap) tem_metadata.get("labels");
+					for(Object key: tem_labels.keySet()) {
+						new_template_metadata_labels.put(key, matchLabels.get(key));
+					}
+				}else {
+					System.out.println("error: no labels");	
+				}
+			}else {
+				System.out.print("error: no metadata");
+			}
+		}else {
+			System.out.print("error: no template");
+		}
+		
+		for(KVPair kvpair: labels) {
+			new_selector_matchLabels.put(kvpair.getKey(),kvpair.getValue());
+			new_template_metadata_labels.put(kvpair.getKey(),kvpair.getValue());
+		}
+		
+		new_selector.put("matchLabels", new_selector_matchLabels);
+		new_template_metadata.put("labels", new_template_metadata_labels);
+		new_template.put("metadata", new_template_metadata);
+		new_spec.put("selector", new_selector);
+		new_spec.put("replicas", spec.get("replicas"));
+		
+		//add template.spec by package
+		if(template.get("spec")!=null){
+			tem_spec = (LinkedHashMap) template.get("spec");
+			new_template.put("spec", tem_spec);
+		}
+		new_spec.put("template", new_template);
+		content = result;
+	}
+	
 	public static void main(String args[]) {
 		podYaml test = new podYaml("test2.yaml");
 		pod testPod = test.getPod();

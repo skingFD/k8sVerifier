@@ -3,6 +3,10 @@ package bean;
 import java.util.ArrayList;
 import java.util.BitSet;
 
+/**
+ * @author skingFD
+ * policy for BV generator, contains filters
+ */
 public class policy{
 	ArrayList<filter> filters;
 	ArrayList<port> ports;
