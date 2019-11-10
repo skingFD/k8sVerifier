@@ -2,6 +2,7 @@ package bean;
 
 import java.util.BitSet;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 public class namespace{
 	String name;
@@ -43,5 +44,35 @@ public class namespace{
 	}
 	public String getLabel(String Key) {
 		return labels.get(Key);
+	}
+	
+	/**
+	 * generate Yaml from namespace
+	 * @return generated Yaml
+	 */
+	public nsYaml generateYaml() {
+		LinkedHashMap result = new LinkedHashMap();
+		//apiVersion and kind
+		result.put("apiVersion", "networking.k8s.io/v1");
+		result.put("kind", "NetworkPolicy");
+		//metadata
+		LinkedHashMap metadata = new LinkedHashMap();
+		metadata.put("name", name);
+		
+		LinkedHashMap labelsMap = new LinkedHashMap();
+		for(String key: labels.keySet()) {
+			labelsMap.put(key, labels.get(key));
+		}
+		metadata.put("labels", labelsMap);
+		result.put("metadata", metadata);
+		
+		return new nsYaml(result);
+	}
+	
+	public static void main(String args[]) {
+		nsYaml testYaml = new nsYaml("testns1.yaml");
+		namespace testNs = testYaml.getNS();
+		nsYaml testAfter = testNs.generateYaml();
+		System.out.println(testAfter);
 	}
 }

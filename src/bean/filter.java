@@ -101,4 +101,20 @@ public class filter{
 	public void setPodSelector(HashMap<String, String> podSelector) {
 		this.podSelector = podSelector;
 	}
+	
+	public void putPodSelector(String key, String value) {
+		podSelector.put(key, value);
+	}
+	
+	public String getPodSelector(String key) {
+		return podSelector.get(key);
+	}
+	
+	public void putNsSelector(String key, String value) {
+		nsSelector.put(key, value);
+	}
+	
+	public String getNsSelector(String key) {
+		return nsSelector.get(key);
+	}
 }

@@ -15,7 +15,7 @@ public class policies{
 	boolean allPods;
 	String name;
 	String namespace;
-	HashMap<String,String> pods;
+	HashMap<String,String> pods; //Selector
 	ArrayList<policy> inPolicies;
 	ArrayList<policy> ePolicies;
 	BitSet inAllow;

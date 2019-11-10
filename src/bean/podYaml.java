@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 import org.yaml.snakeyaml.Yaml;
@@ -130,7 +131,7 @@ public class podYaml{
 		return result;
 	}
 	
-	public void addLabels(ArrayList<KVPair> labels) {
+	public void addLabels(HashMap<String,String> labels) {
 		LinkedHashMap result = new LinkedHashMap();
 		// apiVersion and kind
 		result.put("apiVersion", (String) content.get("apiVersion"));
@@ -186,9 +187,9 @@ public class podYaml{
 			System.out.print("error: no template");
 		}
 		
-		for(KVPair kvpair: labels) {
-			new_selector_matchLabels.put(kvpair.getKey(),kvpair.getValue());
-			new_template_metadata_labels.put(kvpair.getKey(),kvpair.getValue());
+		for(String key: labels.keySet()) {
+			new_selector_matchLabels.put(key,labels.get(key));
+			new_template_metadata_labels.put(key,labels.get(key));
 		}
 		
 		new_selector.put("matchLabels", new_selector_matchLabels);

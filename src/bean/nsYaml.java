@@ -30,6 +30,12 @@ public class nsYaml{
 		this.yamlString = yaml.dump(content);
 	}
 	
+	public nsYaml(LinkedHashMap content) {
+		this.yaml = new Yaml();
+		this.content = content;
+		this.yamlString = yaml.dump(content);
+	}
+	
 	public String getYamlDump() {
 		this.yamlString = yaml.dump(content);
 		return this.yamlString;

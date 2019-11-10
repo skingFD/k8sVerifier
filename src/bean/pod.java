@@ -14,6 +14,9 @@ public class pod{
 //	BitSet SelectorPod;
 //	BitSet AllowNS;
 //	BitSet AllowPod;
+	//choose data structure, BitSet is stable, ArrayList performs better when sparse
+	BitSet IntentIn;
+	BitSet IntentE;
 	BitSet AllowPodIn;
 	BitSet AllowPodE;
 	
@@ -71,6 +74,20 @@ public class pod{
 		this.labels = labels;
 	}
 	
+	public void setIntent(int length) {
+		IntentIn = new BitSet(length);
+		IntentIn.set(0, length);
+		IntentE = new BitSet(length);
+		IntentE.set(0, length);
+	}
+	
+	public void clearIntent(int length) {
+		IntentIn = new BitSet(length);
+		IntentIn.clear(0, length);
+		IntentE = new BitSet(length);
+		IntentE.clear(0, length);
+	}
+	
 	public void setall(int length) {
 		AllowPodIn = new BitSet(length);
 		AllowPodIn.set(0, length);
@@ -85,6 +102,22 @@ public class pod{
 		AllowPodE.clear(0, length);
 	}
 	
+	public BitSet getIntentIn() {
+		return IntentIn;
+	}
+
+	public void setIntentIn(BitSet intentIn) {
+		IntentIn = intentIn;
+	}
+
+	public BitSet getIntentE() {
+		return IntentE;
+	}
+
+	public void setIntentE(BitSet intentE) {
+		IntentE = intentE;
+	}
+
 	public BitSet getAllowPodIn() {
 		return AllowPodIn;
 	}
