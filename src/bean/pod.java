@@ -25,6 +25,10 @@ public class pod{
 		name = "";
 		IP = "0.0.0.0";
 		labels = new HashMap<String,String>();
+		IntentIn = new BitSet();
+		IntentE = new BitSet();
+		AllowPodIn = new BitSet();
+		AllowPodE = new BitSet();
 	}
 	
 	public pod(String namespace, String name, String IP, HashMap<String,String> labels) {
@@ -32,6 +36,10 @@ public class pod{
 		this.name = name;
 		this.IP = IP;
 		this.labels = labels;
+		IntentIn = new BitSet();
+		IntentE = new BitSet();
+		AllowPodIn = new BitSet();
+		AllowPodE = new BitSet();
 	}
 
 	public String getNamespace() {

@@ -204,7 +204,9 @@ public class podYaml{
 			new_template.put("spec", tem_spec);
 		}
 		new_spec.put("template", new_template);
+		result.put("spec", new_spec);
 		content = result;
+		yamlString = yaml.dump(content);
 	}
 	
 	public static void main(String args[]) {

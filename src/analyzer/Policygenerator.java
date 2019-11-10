@@ -26,15 +26,71 @@ public class Policygenerator{
 	ArrayList<allowLink> links;
 	
 	public Policygenerator() {
-		ArrayList<policyYaml> policyYamlList = new ArrayList<policyYaml>();
-		ArrayList<podYaml> podYamlList = new ArrayList<podYaml>();
-		ArrayList<nsYaml> nsYamlList = new ArrayList<nsYaml>();
-		ArrayList<policies> policyList = new ArrayList<policies>();
-		ArrayList<pod> podList = new ArrayList<pod>();
-		ArrayList<namespace> nsList = new ArrayList<namespace>();
-		ArrayList<allowLink> links = new ArrayList<allowLink>();
+		policyYamlList = new ArrayList<policyYaml>();
+		podYamlList = new ArrayList<podYaml>();
+		nsYamlList = new ArrayList<nsYaml>();
+		policyList = new ArrayList<policies>();
+		podList = new ArrayList<pod>();
+		nsList = new ArrayList<namespace>();
+		links = new ArrayList<allowLink>();
 	}
 	
+	public ArrayList<policyYaml> getPolicyYamlList() {
+		return policyYamlList;
+	}
+
+	public void setPolicyYamlList(ArrayList<policyYaml> policyYamlList) {
+		this.policyYamlList = policyYamlList;
+	}
+
+	public ArrayList<podYaml> getPodYamlList() {
+		return podYamlList;
+	}
+
+	public void setPodYamlList(ArrayList<podYaml> podYamlList) {
+		this.podYamlList = podYamlList;
+	}
+
+	public ArrayList<nsYaml> getNsYamlList() {
+		return nsYamlList;
+	}
+
+	public void setNsYamlList(ArrayList<nsYaml> nsYamlList) {
+		this.nsYamlList = nsYamlList;
+	}
+
+	public ArrayList<policies> getPolicyList() {
+		return policyList;
+	}
+
+	public void setPolicyList(ArrayList<policies> policyList) {
+		this.policyList = policyList;
+	}
+
+	public ArrayList<pod> getPodList() {
+		return podList;
+	}
+
+	public void setPodList(ArrayList<pod> podList) {
+		this.podList = podList;
+	}
+
+	public ArrayList<namespace> getNsList() {
+		return nsList;
+	}
+
+	public void setNsList(ArrayList<namespace> nsList) {
+		this.nsList = nsList;
+	}
+
+	public ArrayList<allowLink> getLinks() {
+		return links;
+	}
+
+	public void setLinks(ArrayList<allowLink> links) {
+		this.links = links;
+	}
+
 	public int getNS(String name) {
 		for(int i = 0; i< nsList.size(); i++) {
 			if(nsList.get(i).getName().equals(name)) {
@@ -110,6 +166,30 @@ public class Policygenerator{
 		}
 	}
 	public static void main(String args[]) {
+		Policygenerator pg = new Policygenerator();
+		// test main function
 
+		// initiate policy
+
+		// initiate pod
+		podYaml podyaml1 = new podYaml("testdep1.yaml");
+		podYaml podyaml2 = new podYaml("testdep2.yaml");
+		pg.getPodYamlList().add(podyaml1);
+		pg.getPodYamlList().add(podyaml2);
+		pg.getPodList().add(podyaml1.getPod());
+		pg.getPodList().add(podyaml2.getPod());
+		
+		// initiate NS
+		nsYaml nsyaml1 = new nsYaml("testns1.yaml");
+		nsYaml nsyaml2 = new nsYaml("testns2.yaml");
+		pg.getNsList().add(nsyaml1.getNS());
+		pg.getNsList().add(nsyaml2.getNS());
+		
+		// initiate allowLink
+		allowLink alink = new allowLink(0,1,80,false);
+		pg.getLinks().add(alink);
+		
+		pg.generate();
+		System.out.println(pg);
 	}
 }
