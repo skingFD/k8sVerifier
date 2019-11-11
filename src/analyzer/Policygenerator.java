@@ -35,6 +35,38 @@ public class Policygenerator{
 		links = new ArrayList<allowLink>();
 	}
 	
+	public Policygenerator(ArrayList<String> podinput, ArrayList<String> nsinput, ArrayList<allowLink> linkinput) {
+		policyYamlList = new ArrayList<policyYaml>();
+		podYamlList = new ArrayList<podYaml>();
+		nsYamlList = new ArrayList<nsYaml>();
+		policyList = new ArrayList<policies>();
+		podList = new ArrayList<pod>();
+		nsList = new ArrayList<namespace>();
+		links = new ArrayList<allowLink>();
+
+		// initiate pod
+		for(String podyaml: podinput) {
+			podYamlList.add(new podYaml(podyaml));
+		}
+		for(podYaml podyaml: podYamlList) {
+			podList.add(podyaml.getPod());
+		}
+		
+		// initiate NS
+		for(String nsyaml: nsinput) {
+			nsYamlList.add(new nsYaml(nsyaml));
+		}
+		for(nsYaml nsyaml: nsYamlList) {
+			nsList.add(nsyaml.getNS());
+		}
+		
+		// initiate allowLink
+		for(allowLink link: linkinput) {
+			links.add(link);
+		}
+		generate();
+	}
+	
 	public ArrayList<policyYaml> getPolicyYamlList() {
 		return policyYamlList;
 	}
@@ -166,6 +198,7 @@ public class Policygenerator{
 		}
 	}
 	public static void main(String args[]) {
+		
 		Policygenerator pg = new Policygenerator();
 		// test main function
 
