@@ -1,4 +1,4 @@
-package bean;
+package bean.yaml;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -8,6 +8,9 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 import org.yaml.snakeyaml.Yaml;
+
+import bean.KVPair;
+import bean.pod;
 
 public class podYaml{
 	public Yaml yaml;

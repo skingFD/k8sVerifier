@@ -6,12 +6,12 @@ import java.util.BitSet;
 import bean.allowLink;
 import bean.filter;
 import bean.namespace;
-import bean.nsYaml;
 import bean.pod;
-import bean.podYaml;
 import bean.policies;
 import bean.policy;
-import bean.policyYaml;
+import bean.yaml.nsYaml;
+import bean.yaml.podYaml;
+import bean.yaml.policyYaml;
 import utils.randomStrUtil;
 
 public class Policygenerator{
@@ -33,6 +33,10 @@ public class Policygenerator{
 		podList = new ArrayList<pod>();
 		nsList = new ArrayList<namespace>();
 		links = new ArrayList<allowLink>();
+	}
+	
+	public Policygenerator(Intentanalyzer IntentAnalyzer) {
+		this(IntentAnalyzer.getPodList(), IntentAnalyzer.getNsList(), IntentAnalyzer.getLinkList());
 	}
 	
 	public Policygenerator(ArrayList<String> podinput, ArrayList<String> nsinput, ArrayList<allowLink> linkinput) {
@@ -158,7 +162,9 @@ public class Policygenerator{
 					podList.get(j).addLabel(podKey, podValue);
 					int nsIndex = getNS(podList.get(j).getName());
 					if(nsIndex == -1) {
-						// TODO if no NS
+						namespace newNS = new namespace(podList.get(j).getName());
+						newNS.addLabel(NSKey, NSValue);
+						nsList.add(newNS);
 					}else {
 						nsList.get(nsIndex).addLabel(NSKey, NSValue);
 					}
@@ -173,6 +179,7 @@ public class Policygenerator{
 				policies testPolicies = new policies();
 				policy inPolicy = new policy();
 				filter inFilter = new filter(false);
+				filter sysFilter = new filter(false);
 				testPolicies.setHaveIn(true); // Ingress policy
 				testPolicies.setNamespace(podList.get(i).getNamespace()); // Set policy namespace
 				testPolicies.setName(policyName); // Policy name generated randomly
@@ -181,7 +188,10 @@ public class Policygenerator{
 				inFilter.setHavePodSelector(true);
 				inFilter.putPodSelector(podKey, podValue);
 				inFilter.putNsSelector(NSKey, NSValue);
+				sysFilter.setHaveNsSelector(true);
+				sysFilter.putNsSelector("role", "kube-system"); //XXX: need to attach label to kube-system
 				inPolicy.addToFilters(inFilter);
+				inPolicy.addToFilters(sysFilter);
 				testPolicies.addToIn(inPolicy);
 				policyList.add(testPolicies);
 			}

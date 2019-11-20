@@ -1,4 +1,4 @@
-package bean;
+package bean.yaml;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -9,6 +9,11 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.yaml.snakeyaml.Yaml;
+
+import bean.filter;
+import bean.policies;
+import bean.policy;
+import bean.port;
 
 public class policyYaml{
 	public Yaml yaml;

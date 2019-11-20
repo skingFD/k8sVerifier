@@ -5,6 +5,8 @@ import java.util.BitSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
+import bean.yaml.policyYaml;
+
 /**
  * @author skingFD
  * policies for BV generator, contains inPolicies, ePolicies

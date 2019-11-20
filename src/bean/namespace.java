@@ -4,6 +4,8 @@ import java.util.BitSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
+import bean.yaml.nsYaml;
+
 public class namespace{
 	String name;
 	HashMap<String,String> labels;

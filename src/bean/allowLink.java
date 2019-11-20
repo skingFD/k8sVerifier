@@ -14,6 +14,13 @@ public class allowLink{
 		protocol = false;
 	}
 	
+	public allowLink(int srcIndex, int dstIndex) {
+		this.srcIndex = srcIndex;
+		this.dstIndex = dstIndex;
+		this.port = 0;
+		this.protocol = false;
+	}
+	
 	public allowLink(int srcIndex, int dstIndex, int port, boolean protocol) {
 		this.srcIndex = srcIndex;
 		this.dstIndex = dstIndex;

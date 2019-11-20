@@ -20,18 +20,29 @@ public class yamlutil{
 		ArrayList<allowLink> linkList = new ArrayList<allowLink>();
 		try {
 			LinkedHashMap intent = (LinkedHashMap) yaml.load(new FileInputStream(f));
-			ArrayList podlist = (ArrayList) intent.get("podList");
+			ArrayList podlist = (ArrayList) intent.get("podlist");
 			for(Object podyaml: podlist) {
 				podList.add((String)podyaml);
 			}
-			ArrayList nslist = (ArrayList) intent.get("nsList");
+			ArrayList nslist = (ArrayList) intent.get("nslist");
 			for(Object nsyaml: nslist) {
 				nsList.add((String)nsyaml);
 			}
 			ArrayList linklist = (ArrayList) intent.get("links");
 			for(Object linkyaml: linklist) {
 				LinkedHashMap linkmap = (LinkedHashMap) linkyaml;
-				linkList.add(new allowLink((int)linkmap.get("src"),(int)linkmap.get("dst"),80,false));//TODO port,protocol
+				int port;
+				boolean protocol;
+				if(linkmap.get("port")!=null) {
+					port = (int) linkmap.get("port");
+				}
+				if(linkmap.get("protocol") == null) {
+				}else if(((String)linkmap.get("protocol")).equals("UDP")) {
+					protocol = true;
+				}else{
+					protocol = false;
+				}
+				linkList.add(new allowLink((int)linkmap.get("src"),(int)linkmap.get("dst"),80,false));
 			}
 			
 		}catch(FileNotFoundException e) {

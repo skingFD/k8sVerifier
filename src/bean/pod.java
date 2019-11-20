@@ -5,6 +5,7 @@ import java.util.BitSet;
 import java.util.HashMap;
 
 public class pod{
+	String type; //Deployment, DaemonSet, StatefulSet
 	String namespace;//TODO how to get the info of NS
 	String name;
 	String IP;//TODO how to calculate IP
@@ -21,6 +22,7 @@ public class pod{
 	BitSet AllowPodE;
 	
 	public pod() {
+		type = "Deployment";
 		namespace = "default";
 		name = "";
 		IP = "0.0.0.0";
@@ -32,6 +34,7 @@ public class pod{
 	}
 	
 	public pod(String namespace, String name, String IP, HashMap<String,String> labels) {
+		type = "Deployment";
 		this.namespace = namespace;
 		this.name = name;
 		this.IP = IP;
@@ -42,6 +45,14 @@ public class pod{
 		AllowPodE = new BitSet();
 	}
 
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+	
 	public String getNamespace() {
 		return namespace;
 	}

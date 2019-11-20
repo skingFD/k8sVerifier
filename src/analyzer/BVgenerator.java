@@ -5,12 +5,12 @@ import java.util.BitSet;
 
 import bean.KVPair;
 import bean.namespace;
-import bean.nsYaml;
 import bean.pod;
-import bean.podYaml;
-import bean.policyYaml;
 import bean.policies;
 import bean.policy;
+import bean.yaml.nsYaml;
+import bean.yaml.podYaml;
+import bean.yaml.policyYaml;
 
 //KV: Key-Value pair
 //BV: BitVector
