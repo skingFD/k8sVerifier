@@ -1,6 +1,7 @@
 package bean;
 
 
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
 
@@ -20,6 +21,7 @@ public class pod{
 	BitSet IntentE;
 	BitSet AllowPodIn;
 	BitSet AllowPodE;
+	ArrayList<probe> Probes;
 	
 	public pod() {
 		type = "Deployment";
@@ -31,6 +33,7 @@ public class pod{
 		IntentE = new BitSet();
 		AllowPodIn = new BitSet();
 		AllowPodE = new BitSet();
+		Probes = new ArrayList<probe>();
 	}
 	
 	public pod(String namespace, String name, String IP, HashMap<String,String> labels) {
@@ -43,6 +46,7 @@ public class pod{
 		IntentE = new BitSet();
 		AllowPodIn = new BitSet();
 		AllowPodE = new BitSet();
+		Probes = new ArrayList<probe>();
 	}
 
 	public String getType() {
@@ -183,5 +187,17 @@ public class pod{
 	
 	public boolean checkAllowE(int dest) {
 		return AllowPodE.get(dest);
+	}
+	
+	public ArrayList<probe> getProbes(){
+		return this.Probes;
+	}
+	
+	public void addToProbes(probe Probe) {
+		this.Probes.add(Probe);
+	}
+	
+	public probe getFromProbes(int i) {
+		return this.Probes.get(i);
 	}
 }

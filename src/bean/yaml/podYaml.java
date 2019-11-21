@@ -11,6 +11,7 @@ import org.yaml.snakeyaml.Yaml;
 
 import bean.KVPair;
 import bean.pod;
+import bean.probe;
 
 public class podYaml{
 	public Yaml yaml;
@@ -134,7 +135,7 @@ public class podYaml{
 		return result;
 	}
 	
-	public void addLabels(HashMap<String,String> labels) {
+	public void addLabels(HashMap<String,String> labels, ArrayList<probe> probes) {
 		LinkedHashMap result = new LinkedHashMap();
 		// apiVersion and kind
 		result.put("apiVersion", (String) content.get("apiVersion"));
@@ -200,10 +201,52 @@ public class podYaml{
 		new_template.put("metadata", new_template_metadata);
 		new_spec.put("selector", new_selector);
 		new_spec.put("replicas", spec.get("replicas"));
-		
+		for(Object tem_item: template.keySet()) {
+			String tem_item_string = (String)tem_item;
+			if(!(tem_item_string.equals("spec")||tem_item_string.equals("metadata"))) {
+				new_template.put(tem_item, template.get(tem_item));
+			}
+		}
 		//add template.spec by package
 		if(template.get("spec")!=null){
 			tem_spec = (LinkedHashMap) template.get("spec");
+			ArrayList containers = (ArrayList) tem_spec.get("containers");
+			for(Object container: containers) {
+				LinkedHashMap container_map = (LinkedHashMap)container;
+				for(probe Probe:probes) {
+					LinkedHashMap probeMap = new LinkedHashMap();
+					if(Probe.getHandler()==0) { //exec
+						LinkedHashMap exec = new LinkedHashMap();
+						ArrayList commands = new ArrayList();
+						for(String command: Probe.getCommands()) {
+							commands.add(command);
+						}
+						exec.put("command", commands);
+						probeMap.put("exec", exec);
+					}else if(Probe.getHandler() == 1) { //httpGet
+						LinkedHashMap httpGet = new LinkedHashMap();
+						httpGet.put("path", Probe.getPath());
+						httpGet.put("port", Probe.getPort());
+						probeMap.put("httpGet", httpGet);
+					}
+					if(Probe.getInitialDelaySeconds() != -1) {
+						probeMap.put("initialDelaySeconds", Probe.getInitialDelaySeconds());
+					}
+					if(Probe.getFailureThreshold() != -1) {
+						probeMap.put("failureThreshold", Probe.getFailureThreshold());
+					}
+					if(Probe.getPeriodSeconds() != -1) {
+						probeMap.put("periodSeconds", Probe.getPeriodSeconds());
+					}
+					if(Probe.getProbeType()==0) { //startup
+						container_map.put("startupProbe", probeMap);
+					}else if(Probe.getProbeType()==1) { //liveness
+						container_map.put("livenessProbe", probeMap);
+					}else if(Probe.getProbeType()==2) { //readiness
+						container_map.put("readinessProbe", probeMap);
+					}
+				}
+			}
 			new_template.put("spec", tem_spec);
 		}
 		new_spec.put("template", new_template);
