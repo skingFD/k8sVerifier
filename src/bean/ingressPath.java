@@ -22,7 +22,11 @@ public class ingressPath{
 	}
 
 	public void setPath(String path) {
-		this.path = path;
+		if(path != null) {
+			this.path = path;
+		}else {
+			this.path = "";
+		}
 	}
 
 	public String getServiceName() {

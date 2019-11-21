@@ -55,7 +55,7 @@ public class namespace{
 	public nsYaml generateYaml() {
 		LinkedHashMap result = new LinkedHashMap();
 		//apiVersion and kind
-		result.put("apiVersion", "networking.k8s.io/v1");
+		result.put("apiVersion", "v1");
 		result.put("kind", "NetworkPolicy");
 		//metadata
 		LinkedHashMap metadata = new LinkedHashMap();

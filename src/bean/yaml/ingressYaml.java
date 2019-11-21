@@ -11,6 +11,7 @@ import org.yaml.snakeyaml.Yaml;
 import bean.ingress;
 import bean.ingressPath;
 import bean.ingressRule;
+import bean.pod;
 
 public class ingressYaml{
 	public Yaml yaml;
@@ -31,6 +32,12 @@ public class ingressYaml{
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
+		this.yamlString = yaml.dump(content);
+	}
+	
+	public ingressYaml(LinkedHashMap content) {
+		this.yaml = new Yaml();
+		this.content = content;
 		this.yamlString = yaml.dump(content);
 	}
 	
@@ -57,6 +64,7 @@ public class ingressYaml{
 				ingressRule ingressrule = new ingressRule();
 				LinkedHashMap ruleMap = (LinkedHashMap)rule;
 				String host = (String) ruleMap.get("host");
+				ingressrule.setHost(host);
 				if(ruleMap.get("http") != null) {
 					LinkedHashMap http = (LinkedHashMap) ruleMap.get("http");
 					ArrayList paths = (ArrayList) http.get("paths");
@@ -80,12 +88,19 @@ public class ingressYaml{
 						LinkedHashMap backend = (LinkedHashMap)pathMap.get("backend");
 						ingresspath.setServiceName((String)backend.get("serviceName"));
 						ingresspath.setServicePort((int)backend.get("servicePort"));
-						ingressrule.addHttpPath(ingresspath);
+						ingressrule.addHttpsPath(ingresspath);
 					}
 				}
 				result.addToRules(ingressrule);
 			}
 		}
 		return result;
+	}
+	
+	public static void main(String args[]) {
+		ingressYaml test = new ingressYaml("testingress.yaml");
+		ingress testIngress = test.getIngress();
+		ingressYaml testout = testIngress.generateYaml();
+		System.out.println(testout);
 	}
 }

@@ -1,0 +1,27 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-myapp
+  namespace: test1
+  #annotations: 
+  #  kubernetes.io/ingress.class: "nginx"
+spec:
+  rules:
+  - host: tomcat.skingfd.com
+    http:
+      paths:
+      - path: /examples/
+        backend:
+          serviceName: test1
+          servicePort: 8080
+      - path: /examples/servlets
+        backend:
+          serviceName: nginx
+          servicePort: 80
+  - host: nginx.skingfd.com
+    https:
+      paths:
+      - path:
+        backend:
+          serviceName: nginx
+          servicePort: 80
