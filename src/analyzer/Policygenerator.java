@@ -4,11 +4,12 @@ import java.util.ArrayList;
 import java.util.BitSet;
 
 import bean.allowLink;
-import bean.filter;
-import bean.namespace;
-import bean.pod;
-import bean.policies;
-import bean.policy;
+import bean.resources.filter;
+import bean.resources.namespace;
+import bean.resources.pod;
+import bean.resources.policies;
+import bean.resources.policy;
+import bean.resources.probe;
 import bean.yaml.nsYaml;
 import bean.yaml.podYaml;
 import bean.yaml.policyYaml;
@@ -197,8 +198,9 @@ public class Policygenerator{
 			}
 		}
 		//generate Yamls
+		ArrayList<probe> probeList = new ArrayList<probe>(); // TODO implement probelist
 		for(int i = 0; i < podList.size(); i++) {
-			podYamlList.get(i).addLabels(podList.get(i).getLabels());
+			podYamlList.get(i).addLabels(podList.get(i).getLabels(), probeList);
 		}
 		for(int i = 0; i < policyList.size(); i++) {
 			policyYamlList.add(policyList.get(i).generateYaml());

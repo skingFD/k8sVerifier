@@ -1,4 +1,4 @@
-package bean;
+package bean.resources;
 
 public class ingressPath{
 	String path;

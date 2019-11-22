@@ -1,10 +1,11 @@
-package bean;
+package bean.resources;
 
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
+import bean.KVPair;
 import bean.yaml.policyYaml;
 
 /**

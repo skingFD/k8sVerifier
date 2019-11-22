@@ -8,7 +8,7 @@ import java.util.LinkedHashMap;
 
 import org.yaml.snakeyaml.Yaml;
 
-import bean.namespace;
+import bean.resources.namespace;
 
 public class nsYaml{
 	public Yaml yaml;

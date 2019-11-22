@@ -6,7 +6,7 @@ import java.util.Map;
 
 import analyzer.Intentanalyzer;
 import analyzer.Policygenerator;
-import bean.pod;
+import bean.resources.pod;
 import utils.yamlutil;
 
 public class driver{ 

@@ -1,4 +1,4 @@
-package bean;
+package bean.resources;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

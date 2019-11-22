@@ -8,10 +8,10 @@ import java.util.LinkedHashMap;
 
 import org.yaml.snakeyaml.Yaml;
 
-import bean.ingress;
-import bean.ingressPath;
-import bean.ingressRule;
-import bean.pod;
+import bean.resources.ingress;
+import bean.resources.ingressPath;
+import bean.resources.ingressRule;
+import bean.resources.pod;
 
 public class ingressYaml{
 	public Yaml yaml;

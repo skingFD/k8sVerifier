@@ -1,4 +1,4 @@
-package bean;
+package bean.resources;
 
 //Deploy for policy generator
 public class deploy{

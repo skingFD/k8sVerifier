@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.BitSet;
 
 import bean.KVPair;
-import bean.namespace;
-import bean.pod;
-import bean.policies;
-import bean.policy;
+import bean.resources.namespace;
+import bean.resources.pod;
+import bean.resources.policies;
+import bean.resources.policy;
 import bean.yaml.nsYaml;
 import bean.yaml.podYaml;
 import bean.yaml.policyYaml;

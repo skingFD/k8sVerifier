@@ -10,10 +10,10 @@ import java.util.Map;
 
 import org.yaml.snakeyaml.Yaml;
 
-import bean.filter;
-import bean.policies;
-import bean.policy;
 import bean.port;
+import bean.resources.filter;
+import bean.resources.policies;
+import bean.resources.policy;
 
 public class policyYaml{
 	public Yaml yaml;

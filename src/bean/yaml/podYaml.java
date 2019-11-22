@@ -10,8 +10,8 @@ import java.util.LinkedHashMap;
 import org.yaml.snakeyaml.Yaml;
 
 import bean.KVPair;
-import bean.pod;
-import bean.probe;
+import bean.resources.pod;
+import bean.resources.probe;
 
 public class podYaml{
 	public Yaml yaml;
@@ -42,6 +42,8 @@ public class podYaml{
 	
 	public pod getPod() {
 		pod result = new pod();
+		// kind
+		result.setType((String)content.get("kind"));
 		// metadata
 		LinkedHashMap metadata = (LinkedHashMap) content.get("metadata");
 		if (metadata.get("name") != null) { // metadata.name
