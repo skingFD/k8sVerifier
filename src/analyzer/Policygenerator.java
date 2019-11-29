@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.BitSet;
 
 import bean.allowLink;
+import bean.serviceChain;
 import bean.resources.filter;
 import bean.resources.namespace;
 import bean.resources.pod;
@@ -37,10 +38,10 @@ public class Policygenerator{
 	}
 	
 	public Policygenerator(Intentanalyzer IntentAnalyzer) {
-		this(IntentAnalyzer.getPodList(), IntentAnalyzer.getNsList(), IntentAnalyzer.getLinkList());
+		this(IntentAnalyzer.getIntent().getPodYamls(), IntentAnalyzer.getIntent().getLinks());
 	}
 	
-	public Policygenerator(ArrayList<String> podinput, ArrayList<String> nsinput, ArrayList<allowLink> linkinput) {
+	public Policygenerator(ArrayList<String> podinput, ArrayList<allowLink> linkinput) {
 		policyYamlList = new ArrayList<policyYaml>();
 		podYamlList = new ArrayList<podYaml>();
 		nsYamlList = new ArrayList<nsYaml>();
@@ -58,12 +59,6 @@ public class Policygenerator{
 		}
 		
 		// initiate NS
-		for(String nsyaml: nsinput) {
-			nsYamlList.add(new nsYaml(nsyaml));
-		}
-		for(nsYaml nsyaml: nsYamlList) {
-			nsList.add(nsyaml.getNS());
-		}
 		
 		// initiate allowLink
 		for(allowLink link: linkinput) {

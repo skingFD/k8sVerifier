@@ -2,44 +2,33 @@ package bean;
 
 import java.util.ArrayList;
 
-import bean.resources.pod;
 import bean.template.template;
-import bean.yaml.podYaml;
 
 public class serviceChain{
-	ArrayList<podYaml> podYamls;
-	ArrayList<pod> pods;
-	ArrayList<KVPair> links;
+	ArrayList<String> podYamls;
+	
+	ArrayList<allowLink> links;
 	ArrayList<template> templates;
 	
 	public serviceChain() {
-		podYamls = new ArrayList<podYaml>();
-		pods = new ArrayList<pod>();
-		links = new ArrayList<KVPair>();
+		podYamls = new ArrayList<String>();
+		links = new ArrayList<allowLink>();
 		templates = new ArrayList<template>();
 	}
 	
-	public void addPodYaml(podYaml PodYaml) {
+	public void addPodYaml(String PodYaml) {
 		podYamls.add(PodYaml);
 	}
 	
-	public podYaml getPodYaml(int i) {
+	public String getPodYaml(int i) {
 		return podYamls.get(i);
 	}
 	
-	public void addPod(pod Pod) {
-		pods.add(Pod);
-	}
-	
-	public pod getPod(int i) {
-		return pods.get(i);
-	}
-	
-	public void addLink(KVPair link) {
+	public void addLink(allowLink link) {
 		links.add(link);
 	}
 	
-	public KVPair getLink(int i) {
+	public allowLink getLink(int i) {
 		return links.get(i);
 	}
 	
@@ -49,5 +38,29 @@ public class serviceChain{
 	
 	public template getTemplate(int i) {
 		return templates.get(i);
+	}
+
+	public ArrayList<String> getPodYamls() {
+		return podYamls;
+	}
+
+	public void setPodYamls(ArrayList<String> podYamls) {
+		this.podYamls = podYamls;
+	}
+
+	public ArrayList<allowLink> getLinks() {
+		return links;
+	}
+
+	public void setLinks(ArrayList<allowLink> links) {
+		this.links = links;
+	}
+
+	public ArrayList<template> getTemplates() {
+		return templates;
+	}
+
+	public void setTemplates(ArrayList<template> templates) {
+		this.templates = templates;
 	}
 }

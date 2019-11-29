@@ -9,17 +9,21 @@ import java.util.LinkedHashMap;
 import org.yaml.snakeyaml.Yaml;
 
 import bean.allowLink;
+import bean.serviceChain;
 import bean.template.template;
 
 public class Intentanalyzer{
+	serviceChain intent;
 	String intentYaml;
-	ArrayList<String> podList = new ArrayList<String>();
-	ArrayList<String> nsList = new ArrayList<String>();
-	ArrayList<allowLink> linkList = new ArrayList<allowLink>();
 	
 	public Intentanalyzer(String intentYaml) {
 		this.intentYaml = intentYaml;
+		this.intent = new serviceChain();
 		analyzeIntent();
+	}
+	
+	public Intentanalyzer(serviceChain intent) {
+		this.intent = intent;
 	}
 	
 	public String getIntentYaml() {
@@ -29,29 +33,13 @@ public class Intentanalyzer{
 	public void setIntentYaml(String intentYaml) {
 		this.intentYaml = intentYaml;
 	}
-
-	public ArrayList<String> getPodList() {
-		return podList;
+	
+	public serviceChain getIntent() {
+		return intent;
 	}
 
-	public void setPodList(ArrayList<String> podList) {
-		this.podList = podList;
-	}
-
-	public ArrayList<String> getNsList() {
-		return nsList;
-	}
-
-	public void setNsList(ArrayList<String> nsList) {
-		this.nsList = nsList;
-	}
-
-	public ArrayList<allowLink> getLinkList() {
-		return linkList;
-	}
-
-	public void setLinkList(ArrayList<allowLink> linkList) {
-		this.linkList = linkList;
+	public void setIntent(serviceChain intent) {
+		this.intent = intent;
 	}
 
 	public void analyzeIntent() {
@@ -62,13 +50,7 @@ public class Intentanalyzer{
 			ArrayList podlist = (ArrayList) intent.get("podlist");
 			if(podlist != null) {
 				for(Object podyaml: podlist) {
-					podList.add((String)podyaml);
-				}
-			}
-			ArrayList nslist = (ArrayList) intent.get("nslist");
-			if(nslist != null) {
-				for(Object nsyaml: nslist) {
-					nsList.add((String)nsyaml);
+					this.intent.addPodYaml((String)podyaml);
 				}
 			}
 			ArrayList linklist = (ArrayList) intent.get("links");
@@ -86,7 +68,7 @@ public class Intentanalyzer{
 					}else{
 						protocol = false;
 					}
-					linkList.add(new allowLink((int)linkmap.get("src"),(int)linkmap.get("dst"),80,false));
+					this.intent.addLink(new allowLink((int)linkmap.get("src"),(int)linkmap.get("dst"),80,false));
 				}
 			}
 			ArrayList temlist = (ArrayList) intent.get("template");
@@ -95,7 +77,7 @@ public class Intentanalyzer{
 					template tem = new template((LinkedHashMap) temyaml);
 					ArrayList<allowLink> temlinks = tem.analyzeTemplate();
 					for(allowLink temlink: temlinks) {
-						linkList.add(temlink);
+						this.intent.addLink(temlink);
 					}
 				}
 			}

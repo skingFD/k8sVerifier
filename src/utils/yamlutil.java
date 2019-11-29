@@ -48,7 +48,7 @@ public class yamlutil{
 		}catch(FileNotFoundException e) {
 			e.printStackTrace();
 		}
-		return new Policygenerator(podList,nsList,linkList);
+		return new Policygenerator(podList,linkList);
 	}
 	public static void main(String args[]) {
 		Yaml yaml = new Yaml();
