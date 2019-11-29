@@ -9,12 +9,14 @@ import java.util.LinkedHashMap;
 import org.yaml.snakeyaml.Yaml;
 
 import bean.allowLink;
+import bean.bitMatrix;
 import bean.serviceChain;
 import bean.template.template;
 
 public class Intentanalyzer{
 	serviceChain intent;
 	String intentYaml;
+	bitMatrix intentMatrix;
 	
 	public Intentanalyzer(String intentYaml) {
 		this.intentYaml = intentYaml;
@@ -84,6 +86,13 @@ public class Intentanalyzer{
 			
 		}catch(FileNotFoundException e) {
 			e.printStackTrace();
+		}
+	}
+	
+	public void generateMatrix() {
+		intentMatrix = new bitMatrix(this.intent.getPodYamls().size());
+		for(allowLink tempLink: this.intent.getLinks()) {
+			intentMatrix.setBit(tempLink.getSrcIndex(), tempLink.getDstIndex());
 		}
 	}
 }

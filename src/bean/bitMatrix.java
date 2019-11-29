@@ -19,6 +19,12 @@ public class bitMatrix{
 		data = new BitSet(rows*columns);
 	}
 	
+	public bitMatrix(int pods) {
+		this.rows = pods;
+		this.columns = pods;
+		data = new BitSet(pods*pods);
+	}
+	
 	public boolean getBit(int row, int column) {
 		return data.get(row*columns+column);
 	}

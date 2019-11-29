@@ -37,7 +37,7 @@ public class BVgenerator{
 	bitMatrix InMatrix;
 	bitMatrix EMatrix;
 	bitMatrix ReachabilityMatrix;
-	//TODO Matrixs
+	bitMatrix IntentMatrix;
 	
 	public BVgenerator() {
 		PolicyYamlList = new ArrayList<policyYaml>();
@@ -56,9 +56,6 @@ public class BVgenerator{
 		AllowNSLength = 0;
 		AllowPodLength = 0;
 		AllowIPLength = 0;
-		InMatrix = new bitMatrix();
-		EMatrix = new bitMatrix();
-		ReachabilityMatrix = new bitMatrix();
 	}
 
 	public ArrayList<policyYaml> getPolicyYamlList() {
@@ -285,7 +282,10 @@ public class BVgenerator{
 		}
 	}
 	
-	public void calculateMatrixs() {
+	public void calculateAllowMatrixs() {
+		InMatrix = new bitMatrix(this.Pods.size());
+		EMatrix = new bitMatrix(this.Pods.size());
+		ReachabilityMatrix = new bitMatrix(this.Pods.size());
 		for(int i = 0; i < this.Pods.size(); i++) {
 			InMatrix.setRow(i, this.Pods.get(i).getAllowPodIn());
 			EMatrix.setColumn(i, this.Pods.get(i).getAllowPodE());
@@ -294,15 +294,19 @@ public class BVgenerator{
 		ReachabilityMatrix.and(EMatrix);
 	}
 	
+	public void calculateIntentMatrixs() {
+		bitMatrix InMatrix = new bitMatrix(this.Pods.size());
+		bitMatrix EMatrix = new bitMatrix(this.Pods.size());
+		IntentMatrix = new bitMatrix(this.Pods.size());
+		for(int i = 0; i < this.Pods.size(); i++) {
+			InMatrix.setRow(i, this.Pods.get(i).getAllowPodIn());
+			EMatrix.setColumn(i, this.Pods.get(i).getAllowPodE());
+		}
+		IntentMatrix.or(InMatrix);
+		IntentMatrix.and(EMatrix);
+	}
+	
 	public static void main(String args[]) {	
-		BitSet test0 = new BitSet(8);
-		BitSet test1 = test0;
-		test0 = new BitSet(8);
-		test0.set(0);
-		test1.set(0);
-		test1.set(1);
-		test0.xor(test1);
-		System.out.println(test0);
 		// test main function
 		// initiate BVgenerator
 		BVgenerator bvg = new BVgenerator();
@@ -327,6 +331,7 @@ public class BVgenerator{
 		bvg.yaml2Pods();
 		bvg.yaml2NS();
 		bvg.verifyReachability();
+		bvg.calculateAllowMatrixs();
 		
 		System.out.print(bvg);
 	}
