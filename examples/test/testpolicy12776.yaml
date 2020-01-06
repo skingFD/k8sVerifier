@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: policy12776
+  namespace: namespace242
+spec:
+  podSelector:
+    matchLabels:
+      key14: value2
+  policyTypes:
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          key40: value5
+          key10: value35
+          key22: value17
+      podSelector:
+        matchLabels:
+          key43: value9
+          key29: value36
+          key41: value44

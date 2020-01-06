@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pod10764
+  namespace: namespace168
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      key6: value5
+      key22: value24
+      key47: value5
+      key45: value20
+      key25: value14
+      key26: value11
+      key46: value9
+      key18: value1
+      key29: value35
+      key34: value4
+  template:
+    metadata:
+      labels:
+        key6: value5
+        key22: value24
+        key47: value5
+        key45: value20
+        key25: value14
+        key26: value11
+        key46: value9
+        key18: value1
+        key29: value35
+        key34: value4
+    spec:
+      containers:
+      - name: myweb
+        image: tomcat:8.5-jre8
+        ports:
+        - containerPort: 80

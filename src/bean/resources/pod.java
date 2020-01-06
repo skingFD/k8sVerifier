@@ -21,7 +21,15 @@ public class pod{
 	BitSet IntentE;
 	BitSet AllowPodIn;
 	BitSet AllowPodE;
-	ArrayList<probe> Probes;
+	ArrayList<probe> Probes;//Used to add probe parameters, unused now
+	boolean selectedIn;
+	boolean selectedE;
+	//record the policies select or allow this pod to find contradiction
+	ArrayList<Integer> selectedInIndex;
+	ArrayList<Integer> AllowInIndex;
+	ArrayList<Integer> selectedEIndex;
+	ArrayList<Integer> AllowEIndex;
+	
 	
 	public pod() {
 		type = "Deployment";
@@ -34,6 +42,8 @@ public class pod{
 		AllowPodIn = new BitSet();
 		AllowPodE = new BitSet();
 		Probes = new ArrayList<probe>();
+		selectedIn = false;
+		selectedE = false;
 	}
 	
 	public pod(String namespace, String name, String IP, HashMap<String,String> labels) {
@@ -47,6 +57,8 @@ public class pod{
 		AllowPodIn = new BitSet();
 		AllowPodE = new BitSet();
 		Probes = new ArrayList<probe>();
+		selectedIn = false;
+		selectedE = false;
 	}
 
 	public String getType() {
@@ -146,7 +158,13 @@ public class pod{
 	}
 
 	public void setAllowPodIn(BitSet allowPodIn) {
-		AllowPodIn = allowPodIn;
+		if(this.isSelectedIn()) {
+			this.AllowPodIn.or(allowPodIn);
+		}else{
+			this.setSelectedIn(true);
+			this.AllowPodIn.clear();
+			this.AllowPodIn.or(allowPodIn);
+		}
 	}
 	
 	public void andAllowPodIn(BitSet allowIn) {
@@ -162,7 +180,13 @@ public class pod{
 	}
 
 	public void setAllowPodE(BitSet allowPodE) {
-		AllowPodE = allowPodE;
+		if(this.isSelectedE()) {
+			this.AllowPodE.or(allowPodE);
+		}else{
+			this.setSelectedE(true);
+			this.AllowPodE.clear();
+			this.AllowPodE.or(allowPodE);
+		}
 	}
 	
 	public void andAllowPodE(BitSet allowE) {
@@ -199,5 +223,25 @@ public class pod{
 	
 	public probe getFromProbes(int i) {
 		return this.Probes.get(i);
+	}
+
+	public boolean isSelectedE() {
+		return selectedE;
+	}
+
+	public void setSelectedE(boolean selectedE) {
+		this.selectedE = selectedE;
+	}
+	
+	public boolean isSelectedIn() {
+		return selectedIn;
+	}
+
+	public void setSelectedIn(boolean selectedIn) {
+		this.selectedIn = selectedIn;
+	}
+
+	public void setProbes(ArrayList<probe> probes) {
+		Probes = probes;
 	}
 }

@@ -21,6 +21,7 @@ public class policies{
 	HashMap<String,String> pods; //Selector
 	ArrayList<policy> inPolicies;
 	ArrayList<policy> ePolicies;
+	BitSet SelectedPods;
 	BitSet inAllow;
 	BitSet eAllow;
 	
@@ -33,6 +34,7 @@ public class policies{
 		this.pods = new HashMap<String,String>();
 		this.inPolicies = new ArrayList<policy>();
 		this.ePolicies = new ArrayList<policy>();
+		this.SelectedPods = new BitSet();
 		this.inAllow = new BitSet();
 		this.eAllow = new BitSet();
 	}
@@ -46,6 +48,7 @@ public class policies{
 		this.pods = pods;
 		this.inPolicies = inPolicies;
 		this.ePolicies = ePolicies;
+		this.SelectedPods = new BitSet();
 		this.inAllow = new BitSet();
 		this.eAllow = new BitSet();
 	}
@@ -106,11 +109,11 @@ public class policies{
 		this.inPolicies = inPolicies;
 	}
 
-	public ArrayList<policy> getePolicies() {
+	public ArrayList<policy> getEPolicies() {
 		return ePolicies;
 	}
 
-	public void setePolicies(ArrayList<policy> ePolicies) {
+	public void setEPolicies(ArrayList<policy> ePolicies) {
 		this.ePolicies = ePolicies;
 	}
 
@@ -122,12 +125,28 @@ public class policies{
 		this.inAllow = inAllow;
 	}
 
-	public BitSet geteAllow() {
+	public BitSet getEAllow() {
 		return eAllow;
 	}
 
-	public void seteAllow(BitSet eAllow) {
+	public void setEAllow(BitSet eAllow) {
 		this.eAllow = eAllow;
+	}
+
+	public BitSet getSelectedPods() {
+		return SelectedPods;
+	}
+
+	public void setSelectedPods(BitSet selectedPods) {
+		SelectedPods = selectedPods;
+	}
+	
+	public void setSelectedPods(int index) {
+		SelectedPods.set(index);
+	}
+	
+	public void clearSelectedPods(int index) {
+		SelectedPods.clear(index);
 	}
 
 	public void addToIn(policy Policy) {

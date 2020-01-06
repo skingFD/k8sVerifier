@@ -2,11 +2,13 @@ package analyzer;
 
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.HashMap;
 
 import bean.KVPair;
 import bean.allowLink;
 import bean.bitMatrix;
 import bean.serviceChain;
+import bean.resources.filter;
 import bean.resources.namespace;
 import bean.resources.pod;
 import bean.resources.policies;
@@ -23,7 +25,7 @@ public class BVgenerator{
 	ArrayList<podYaml> PodYamlList;
 	ArrayList<pod> Pods;
 	ArrayList<nsYaml> NSYamlList;
-	ArrayList<namespace> Namespaces;
+	HashMap<String,namespace> Namespaces;
 	ArrayList<KVPair> SelectorNSList;//store the corresponding relationship between KV pair and BitVector
 	ArrayList<KVPair> SelectorPodList;
 	ArrayList<KVPair> AllowNSList;
@@ -45,7 +47,7 @@ public class BVgenerator{
 		PodYamlList = new ArrayList<podYaml>();
 		Pods = new ArrayList<pod>();
 		NSYamlList  =new ArrayList<nsYaml>();
-		Namespaces = new ArrayList<namespace>();
+		Namespaces = new HashMap<String,namespace>();
 		SelectorNSList = new ArrayList<KVPair>();
 		SelectorPodList = new ArrayList<KVPair>();
 		AllowNSList = new ArrayList<KVPair>();
@@ -138,21 +140,17 @@ public class BVgenerator{
 		Pods = pods;
 	}
 
-	public ArrayList<namespace> getNamespaces() {
+	public HashMap<String,namespace> getNamespaces() {
 		return Namespaces;
 	}
 
-	public void setNamespaces(ArrayList<namespace> namespaces) {
+	public void setNamespaces(HashMap<String,namespace> namespaces) {
 		Namespaces = namespaces;
 	}
 	
+	
 	public namespace getNamespace(String name) {
-		for(int i = 0; i < Namespaces.size(); i++) {
-			if(Namespaces.get(i).getName().equals(name)) {
-				return Namespaces.get(i);
-			}
-		}
-		return null;
+		return Namespaces.get(name);
 	}
 
 	public int getSelectorNSLength() {
@@ -212,11 +210,282 @@ public class BVgenerator{
 	public void yaml2NS() {
 		for(int i = 0; i < NSYamlList.size(); i++) {
 			nsYaml temp = NSYamlList.get(i);
-			Namespaces.add(temp.getNS());
+			Namespaces.put(temp.getNS().getName(),temp.getNS());
 		}
 	}
 	
-	public void verifyReachability() {
+	/**
+	 * verification with prefiltering
+	 */
+	public void prefilterVerify() {
+		// Init all pods' allowE and allowIn bitset
+		for(int i = 0; i < this.getPods().size(); i++) {
+			this.getPods().get(i).setall(this.getPods().size());
+		}
+		
+		// Init needed hashmaps
+		HashMap<String,BitSet> podLabelHash = new HashMap<String,BitSet>();
+		HashMap<String,BitSet> nsNameHash = new HashMap<String,BitSet>();
+		HashMap<String,BitSet> nsLabelHash = new HashMap<String,BitSet>();
+		ArrayList<String> nsNameList = new ArrayList<String>();
+		
+		// Hash pods by namespace, namespace labels and pod labels
+		for(int i = 0; i < this.getPods().size();i++) {
+			String nsName = this.getPods().get(i).getNamespace();
+			if(nsNameHash.get(nsName)==null) {
+				nsNameHash.put(nsName,new BitSet());
+				nsNameHash.get(nsName).set(i);
+			}else {
+				nsNameHash.get(nsName).set(i);
+			}
+			for(String Key:this.getPods().get(i).getLabels().keySet()) {
+				if(podLabelHash.get(Key)==null) {
+					podLabelHash.put(Key,new BitSet());
+					podLabelHash.get(Key).set(i);
+				}else {
+					podLabelHash.get(Key).set(i);
+				}
+			}
+		}
+		// Hash namespaces by namespace labels
+		for(String Key: this.getNamespaces().keySet()) {
+			nsNameList.add(Key);
+		}
+		
+		for(int i = 0; i < nsNameList.size(); i++) {
+			for(String LabelKey: this.getNamespaces().get(nsNameList.get(i)).getLabels().keySet()) {
+				if(nsLabelHash.get(LabelKey)==null) {
+					nsLabelHash.put(LabelKey, new BitSet());
+					nsLabelHash.get(LabelKey).set(i);
+				}else {
+					nsLabelHash.get(LabelKey).set(i);
+				}
+			}
+		}
+		
+		//Hash policies by namespace, namespace labels and pod labels
+		//Hash result: select pods, allow pods
+		for(int i = 0; i < this.getPolicies().size();i++) {
+			BitSet selectedPodsBit = new BitSet(this.getPods().size());
+			BitSet allowPodsInBit = new BitSet(this.getPods().size());
+			BitSet allowPodsEBit = new BitSet(this.getPods().size());
+			BitSet tempBit;
+			BitSet tempPolicyBit;
+			BitSet tempNsBit;
+			//Select selected pods by namespace and podlabel
+			if(nsNameHash.get(this.getPolicies().get(i).getNamespace())!=null) {
+				selectedPodsBit.or(nsNameHash.get(this.getPolicies().get(i).getNamespace()));
+			}
+			for(String Key: this.getPolicies().get(i).getPods().keySet()) {
+				if(podLabelHash.get(Key)!=null) {
+					selectedPodsBit.and(podLabelHash.get(Key));
+				}else {
+					selectedPodsBit.clear();
+				}
+			}
+			for(int j = 0;;) {
+				j = selectedPodsBit.nextSetBit(j);
+				if(j==-1) {
+					break;
+				}
+				//get selected pods
+				for(String Key: this.getPolicies().get(i).getPods().keySet()) {
+					if(this.getPods().get(j).getLabel(Key).equals(this.getPolicies().get(i).getFromPods(Key))) {
+						//If label matched
+					}else {
+						//If label not match
+						selectedPodsBit.clear(j);
+						break;
+					}
+				}
+				j++;
+			}
+			//Select allow pods by nsLabel and podLabel
+			//In policy
+			for(policy tempPolicy: this.getPolicies().get(i).getInPolicies()) {
+				tempNsBit = new BitSet(nsNameList.size());
+				tempPolicyBit = new BitSet(this.getPods().size());
+				tempPolicyBit.set(0, this.getPods().size());
+				for(filter tempFilter: tempPolicy.getFilters()) {
+					if(tempFilter.isHaveNsSelector()) {
+						//Get all possible selected NS
+						for(String Key: tempFilter.getNsSelector().keySet()) {
+							if(nsLabelHash.get(Key)!=null) {
+								tempNsBit.and(nsLabelHash.get(Key));
+							}else {
+								tempNsBit.clear();
+							}
+						}
+						//Get all selected NS
+						for(int j = 0;;) {
+							j = tempNsBit.nextSetBit(j);
+							if(j==-1) {
+								break;
+							}
+							//get allowed pods
+							//use nslabels
+							for(String Key: tempFilter.getNsSelector().keySet()) {
+								if(this.getNamespace(nsNameList.get(j)).getLabel(Key).equals(tempFilter.getNsSelector(Key))) {
+									//If label matched
+								}else {
+									//If label not match
+									tempNsBit.clear(j);
+									break;
+								}
+							}
+							j++;
+						}
+						//Cast NS to pods
+						for(int j = 0;;) {
+							j = tempNsBit.nextSetBit(j);
+							if(j == -1) {
+								break;
+							}
+							tempPolicyBit.or(nsNameHash.get(nsNameList.get(j)));
+							j++;
+						}
+					}else {
+						//If no nsSelector, use name to filter
+						tempPolicyBit.or(nsNameHash.get(this.getPolicies().get(i).getNamespace()));
+					}
+					if(tempFilter.isHavePodSelector()) {
+						for(String Key: tempFilter.getPodSelector().keySet()) {
+							if(podLabelHash.get(Key)!=null) {
+								tempPolicyBit.and(podLabelHash.get(Key));
+							}else {
+								tempPolicyBit.clear();
+							}
+						}
+					}
+					for(int j = 0;;) {
+						j = tempPolicyBit.nextSetBit(j);
+						if(j==-1) {
+							break;
+						}
+						//get allowed pods
+						//use labels
+						if(tempFilter.isHavePodSelector()) {
+							for(String Key: tempFilter.getPodSelector().keySet()) {
+								if(this.getPods().get(j).getLabel(Key).equals(tempFilter.getPodSelector(Key))) {
+									//If label matched
+								}else {
+									//If label not match
+									tempPolicyBit.clear(j);
+									break;
+								}
+							}
+						}
+						j++;
+					}
+				}
+				
+				allowPodsInBit.or(tempPolicyBit);
+			}
+			
+			//E policy
+			for(policy tempPolicy: this.getPolicies().get(i).getEPolicies()) {
+				tempNsBit = new BitSet(nsNameList.size());
+				tempPolicyBit = new BitSet(this.getPods().size());
+				tempPolicyBit.set(0, this.getPods().size());
+				for(filter tempFilter: tempPolicy.getFilters()) {
+					if(tempFilter.isHaveNsSelector()) {
+						//Get all possible selected NS
+						for(String Key: tempFilter.getNsSelector().keySet()) {
+							if(nsLabelHash.get(Key)!=null) {
+								tempNsBit.and(nsLabelHash.get(Key));
+							}else {
+								tempNsBit.clear();
+							}
+						}
+						//Get all selected NS
+						for(int j = 0;;) {
+							j = tempNsBit.nextSetBit(j);
+							if(j==-1) {
+								break;
+							}
+							//get allowed pods
+							//use nslabels
+							for(String Key: tempFilter.getNsSelector().keySet()) {
+								if(this.getNamespace(nsNameList.get(j)).getLabel(Key).equals(tempFilter.getNsSelector(Key))) {
+									//If label matched
+								}else {
+									//If label not match
+									tempNsBit.clear(j);
+									break;
+								}
+							}
+							j++;
+						}
+						//Cast NS to pods
+						for(int j = 0;;) {
+							j = tempNsBit.nextSetBit(j);
+							if(j == -1) {
+								break;
+							}
+							tempPolicyBit.or(nsNameHash.get(nsNameList.get(j)));
+							j++;
+						}
+					}else {
+						//If no nsSelector, use name to filter
+						tempPolicyBit.or(nsNameHash.get(this.getPolicies().get(i).getNamespace()));
+					}
+					if(tempFilter.isHavePodSelector()) {
+						for(String Key: tempFilter.getPodSelector().keySet()) {
+							if(podLabelHash.get(Key)!=null) {
+								tempPolicyBit.and(podLabelHash.get(Key));
+							}else {
+								tempPolicyBit.clear();
+							}
+						}
+					}
+					for(int j = 0;;) {
+						j = tempPolicyBit.nextSetBit(j);
+						if(j==-1) {
+							break;
+						}
+						//get allowed pods
+						//use labels
+						if(tempFilter.isHavePodSelector()) {
+							for(String Key: tempFilter.getPodSelector().keySet()) {
+								if(this.getPods().get(j).getLabel(Key).equals(tempFilter.getPodSelector(Key))) {
+									//If label matched
+								}else {
+									//If label not match
+									tempPolicyBit.clear(j);
+									break;
+								}
+							}
+						}
+						j++;
+					}
+				}
+				allowPodsEBit.or(tempPolicyBit);
+			}
+			
+			//Selected: selectedPodsBit
+			//AllowedIn: allowPodsBit
+			//AllowedE: allowPodsBit
+			for(int j = 0;;) {
+				j = selectedPodsBit.nextSetBit(j);
+				if(j == -1) {
+					break;
+				}
+				if(this.getPolicies().get(i).isHaveIn()) {
+					this.Pods.get(j).setAllowPodIn(allowPodsInBit);
+				}
+				if(this.getPolicies().get(i).isHaveE()) {
+					this.Pods.get(j).setAllowPodE(allowPodsEBit);
+				}
+				j++;
+			}
+			//calculateAllowMatrixs();
+		}
+	}
+	
+	/**
+	 * naive verification
+	 */
+	public void naiveVerify() {
 		// naive verification
 		for (int i = 0; i < this.getPods().size(); i++) {
 			this.getPods().get(i).setall(this.getPods().size());
@@ -225,14 +494,16 @@ public class BVgenerator{
 			for (int j = 0; j < this.getPolicies().get(i).getInPolicies().size(); j++) {
 				policy inPolicy = this.getPolicies().get(i).getInPolicies().get(j);
 				for (int k = 0; k < this.getPods().size(); k++) {
-					namespace NS = this.getNamespace(this.getPods().get(k).getName());
+					//this.getPolicies().get(i).getInPolicies().get(j).setAllow(k);
+					namespace NS = this.getNamespace(this.getPods().get(k).getNamespace());
 					inPolicy.calculateAllow(k, this.getPods().get(k), NS);
 				}
 			}
-			for (int j = 0; j < this.getPolicies().get(i).getePolicies().size(); j++) {
-				policy ePolicy = this.getPolicies().get(i).getePolicies().get(j);
+			for (int j = 0; j < this.getPolicies().get(i).getEPolicies().size(); j++) {
+				policy ePolicy = this.getPolicies().get(i).getEPolicies().get(j);
 				for (int k = 0; k < this.getPods().size(); k++) {
-					namespace NS = this.getNamespace(this.getPods().get(k).getName());
+					//this.getPolicies().get(i).getEPolicies().get(j).setAllow(k);
+					namespace NS = this.getNamespace(this.getPods().get(k).getNamespace());
 					ePolicy.calculateAllow(k, this.getPods().get(k), NS);
 				}
 			}
@@ -240,20 +511,20 @@ public class BVgenerator{
 		}
 
 		for (int i = 0; i < this.getPods().size(); i++) {
-			boolean first = true;
 			for (int j = 0; j < this.getPolicies().size(); j++) {
 				if (this.getPolicies().get(j).selectPod(this.getPods().get(i))) {
-					if (first) {
-						this.getPods().get(i).clearall(this.getPods().size());
-						first = false;
+					this.getPolicies().get(j).setSelectedPods(j);
+					if(this.getPolicies().get(j).isHaveIn()) {
+						this.getPods().get(i).setAllowPodIn(this.getPolicies().get(j).getInAllow());
 					}
-					this.getPods().get(i).orAllowPodIn(this.getPolicies().get(j).getInAllow());
-					this.getPods().get(i).orAllowPodE(this.getPolicies().get(j).geteAllow());
+					if(this.getPolicies().get(j).isHaveE()) {
+						this.getPods().get(i).setAllowPodE(this.getPolicies().get(j).getEAllow());
+					}
 				}
 			}
 		}
 
-		for (int i = 0; i < this.Pods.size(); i++) {
+		/*for (int i = 0; i < this.Pods.size(); i++) {
 			for (int j = 0; j < this.Pods.size(); j++) {
 				pod podfrom = this.Pods.get(i);
 				pod podto = this.Pods.get(j);
@@ -261,7 +532,7 @@ public class BVgenerator{
 				System.out.println("to: " + podto.getNamespace() + "." + podto.getName());
 				System.out.println(podfrom.checkAllowE(j) && podto.checkAllowIn(i));
 			}
-		}
+		}*/
 	}
 	
 	public void setConsistency() {
@@ -282,6 +553,38 @@ public class BVgenerator{
 		}
 	}
 	
+	public bitMatrix getInMatrix() {
+		return InMatrix;
+	}
+
+	public void setInMatrix(bitMatrix inMatrix) {
+		InMatrix = inMatrix;
+	}
+
+	public bitMatrix getEMatrix() {
+		return EMatrix;
+	}
+
+	public void setEMatrix(bitMatrix eMatrix) {
+		EMatrix = eMatrix;
+	}
+
+	public bitMatrix getReachabilityMatrix() {
+		return ReachabilityMatrix;
+	}
+
+	public void setReachabilityMatrix(bitMatrix reachabilityMatrix) {
+		ReachabilityMatrix = reachabilityMatrix;
+	}
+
+	public bitMatrix getIntentMatrix() {
+		return IntentMatrix;
+	}
+
+	public void setIntentMatrix(bitMatrix intentMatrix) {
+		IntentMatrix = intentMatrix;
+	}
+
 	public void calculateAllowMatrixs() {
 		InMatrix = new bitMatrix(this.Pods.size());
 		EMatrix = new bitMatrix(this.Pods.size());
@@ -306,33 +609,77 @@ public class BVgenerator{
 		IntentMatrix.and(EMatrix);
 	}
 	
+	public void tempInit() {
+		// initiate policy
+		for (int i = 0; i < 20000; i++) {
+			policyYaml policyyaml = new policyYaml("examples/test/testpolicy" + i + ".yaml");
+			this.getPolicyYamlList().add(policyyaml);
+		}
+
+		// initiate pod
+		for (int i = 0; i < 50000; i++) {
+			podYaml podyaml = new podYaml("examples/test/testpod" + i + ".yaml");
+			this.getPodYamlList().add(podyaml);
+		}
+
+		// initiate NS
+		for (int i = 0; i < 500; i++) {
+			nsYaml nsyaml = new nsYaml("examples/test/testns" + i + ".yaml");
+			this.getNSYamlList().add(nsyaml);
+		}
+
+		this.yaml2Policies();
+		this.yaml2Pods();
+		this.yaml2NS();
+		long starttime = System.currentTimeMillis();
+		this.naiveVerify();
+		// bvg.prefilterVerify();
+		long stoptime = System.currentTimeMillis();
+		// bvg.calculateAllowMatrixs();
+
+		System.out.println(stoptime - starttime);
+	}
+	
+	public void tempInit2() {
+		// initiate policy
+		for (int i = 0; i < 20000; i++) {
+			policyYaml policyyaml = new policyYaml("examples/test/testpolicy" + i + ".yaml");
+			this.getPolicyYamlList().add(policyyaml);
+		}
+
+		// initiate pod
+		for (int i = 0; i < 50000; i++) {
+			podYaml podyaml = new podYaml("examples/test/testpod" + i + ".yaml");
+			this.getPodYamlList().add(podyaml);
+		}
+
+		// initiate NS
+		for (int i = 0; i < 500; i++) {
+			nsYaml nsyaml = new nsYaml("examples/test/testns" + i + ".yaml");
+			this.getNSYamlList().add(nsyaml);
+		}
+
+		this.yaml2Policies();
+		this.yaml2Pods();
+		this.yaml2NS();
+		long starttime = System.currentTimeMillis();
+		//bvg.naiveVerify();
+		this.prefilterVerify();
+		long stoptime = System.currentTimeMillis();
+		// bvg.calculateAllowMatrixs();
+
+		System.out.println(stoptime - starttime);
+	}
+	
 	public static void main(String args[]) {	
 		// test main function
-		// initiate BVgenerator
-		BVgenerator bvg = new BVgenerator();
-		
-		// initiate policy
-		policyYaml policyyaml = new policyYaml("testpolicy.yaml");
-		bvg.getPolicyYamlList().add(policyyaml);
-		
-		// initiate pod
-		podYaml podyaml1 = new podYaml("testdep1.yaml");
-		podYaml podyaml2 = new podYaml("testdep2.yaml");
-		bvg.getPodYamlList().add(podyaml1);
-		bvg.getPodYamlList().add(podyaml2);
-		
-		// initiate NS
-		nsYaml nsyaml1 = new nsYaml("testns1.yaml");
-		nsYaml nsyaml2 = new nsYaml("testns2.yaml");
-		bvg.getNSYamlList().add(nsyaml1);
-		bvg.getNSYamlList().add(nsyaml2);
-		
-		bvg.yaml2Policies();
-		bvg.yaml2Pods();
-		bvg.yaml2NS();
-		bvg.verifyReachability();
-		bvg.calculateAllowMatrixs();
-		
-		System.out.print(bvg);
+		//BVgenerator bv1 = new BVgenerator();
+		BVgenerator bv2 = new BVgenerator();
+		//bv1.tempInit();
+		//bv1.calculateAllowMatrixs();
+		bv2.tempInit2();
+		bv2.calculateAllowMatrixs();
+		//bv1.ReachabilityMatrix.getData().xor(bv2.ReachabilityMatrix.getData());
+		//System.out.print(bv1.ReachabilityMatrix.getData());
 	}
 }

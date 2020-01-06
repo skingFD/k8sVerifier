@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pod7384
+  namespace: namespace52
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      key14: value0
+      key39: value24
+      key21: value31
+      key13: value36
+      key9: value47
+      key8: value3
+  template:
+    metadata:
+      labels:
+        key14: value0
+        key39: value24
+        key21: value31
+        key13: value36
+        key9: value47
+        key8: value3
+    spec:
+      containers:
+      - name: myweb
+        image: tomcat:8.5-jre8
+        ports:
+        - containerPort: 80

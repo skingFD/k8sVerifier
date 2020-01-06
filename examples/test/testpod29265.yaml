@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pod29265
+  namespace: namespace230
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      key33: value48
+      key12: value39
+      key36: value45
+      key10: value36
+      key41: value41
+      key8: value2
+      key5: value3
+  template:
+    metadata:
+      labels:
+        key33: value48
+        key12: value39
+        key36: value45
+        key10: value36
+        key41: value41
+        key8: value2
+        key5: value3
+    spec:
+      containers:
+      - name: myweb
+        image: tomcat:8.5-jre8
+        ports:
+        - containerPort: 80

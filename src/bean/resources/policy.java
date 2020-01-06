@@ -49,6 +49,14 @@ public class policy{
 	public void setAllow(BitSet allow) {
 		this.allow = allow;
 	}
+	
+	public void setAllow(int index) {
+		this.allow.set(index);
+	}
+	
+	public void clearAllow(int index) {
+		this.allow.set(index);
+	}
 
 	public void addToFilters(filter Filter) {
 		filters.add(Filter);

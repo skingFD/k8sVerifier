@@ -92,7 +92,7 @@ public class Intentanalyzer{
 	public void generateMatrix() {
 		intentMatrix = new bitMatrix(this.intent.getPodYamls().size());
 		for(allowLink tempLink: this.intent.getLinks()) {
-			intentMatrix.setBit(tempLink.getSrcIndex(), tempLink.getDstIndex());
+			intentMatrix.setBit(tempLink.getSrcIndex(), tempLink.getDstIndex(),true);
 		}
 	}
 }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.BitSet;
 
 import bean.allowLink;
+import bean.bitMatrix;
 import bean.serviceChain;
 import bean.resources.filter;
 import bean.resources.namespace;
@@ -14,7 +15,7 @@ import bean.resources.probe;
 import bean.yaml.nsYaml;
 import bean.yaml.podYaml;
 import bean.yaml.policyYaml;
-import utils.randomStrUtil;
+import utils.randomUtil;
 
 public class Policygenerator{
 	//input yamls
@@ -26,6 +27,9 @@ public class Policygenerator{
 	ArrayList<namespace> nsList;
 	//input intent
 	ArrayList<allowLink> links;
+	//input reachability matrixs
+	bitMatrix unNeededLinks;
+	bitMatrix neededLinks;
 	
 	public Policygenerator() {
 		policyYamlList = new ArrayList<policyYaml>();
@@ -132,6 +136,22 @@ public class Policygenerator{
 		return -1;
 	}
 	
+	public bitMatrix getUnNeededLinks() {
+		return unNeededLinks;
+	}
+
+	public void setUnNeededLinks(bitMatrix unNeededLinks) {
+		this.unNeededLinks = unNeededLinks;
+	}
+
+	public bitMatrix getNeededLinks() {
+		return neededLinks;
+	}
+
+	public void setNeededLinks(bitMatrix neededLinks) {
+		this.neededLinks = neededLinks;
+	}
+
 	public void generate() {
 		// 1.set allowpodin and allowpode
 		// 2.record labels need to be attached
@@ -149,10 +169,10 @@ public class Policygenerator{
 		}
 		for(int i = 0; i < podList.size(); i++) {
 			boolean needPolicy = false;
-			String podKey = randomStrUtil.getRandomStr(10);
-			String podValue = randomStrUtil.getRandomStr(10);
-			String NSKey = randomStrUtil.getRandomStr(10);
-			String NSValue = randomStrUtil.getRandomStr(10);
+			String podKey = randomUtil.getRandomStr(10);
+			String podValue = randomUtil.getRandomStr(10);
+			String NSKey = randomUtil.getRandomStr(10);
+			String NSValue = randomUtil.getRandomStr(10);
 			for(int j = 0; j < podList.size(); j++) {
 				if(podList.get(i).getIntentIn().get(j)) {
 					podList.get(j).addLabel(podKey, podValue);
@@ -168,9 +188,9 @@ public class Policygenerator{
 				}
 			}
 			if(needPolicy) {
-				String selectKey = randomStrUtil.getRandomStr(10);
-				String selectValue = randomStrUtil.getRandomStr(10);
-				String policyName = randomStrUtil.getRandomStr(10);
+				String selectKey = randomUtil.getRandomStr(10);
+				String selectValue = randomUtil.getRandomStr(10);
+				String policyName = randomUtil.getRandomStr(10);
 				podList.get(i).addLabel(selectKey, selectValue); // Attach selector label to pod
 				policies testPolicies = new policies();
 				policy inPolicy = new policy();
