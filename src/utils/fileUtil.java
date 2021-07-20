@@ -7,14 +7,14 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 
 public class fileUtil {
-	public static int podLimit = 50000;
-	public static int nsLimit = 500;
-	public static int policyLimit = 20000;
+	public static int podLimit = 1000;
+	public static int nsLimit = 10;
+	public static int policyLimit = 500;
 	
-	public static int podLabelLimit = 10;
-	public static int nsLabelLimit = 10;
-	public static int keyLimit = 50;
-	public static int valueLimit = 50;
+	public static int podLabelLimit = 5;
+	public static int nsLabelLimit = 5;
+	public static int keyLimit = 10;
+	public static int valueLimit = 10;
 	public static int userLimit = 5;
 	public static int policySelectLabelLimit = 3;
 	public static int policyNsLabelLimit = 3;

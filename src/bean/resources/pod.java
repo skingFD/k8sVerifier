@@ -25,9 +25,8 @@ public class pod{
 	boolean selectedIn;
 	boolean selectedE;
 	//record the policies select or allow this pod to find contradiction
-	ArrayList<Integer> selectedInIndex;
+	ArrayList<Integer> selectedIndex;
 	ArrayList<Integer> AllowInIndex;
-	ArrayList<Integer> selectedEIndex;
 	ArrayList<Integer> AllowEIndex;
 	
 	
@@ -44,6 +43,9 @@ public class pod{
 		Probes = new ArrayList<probe>();
 		selectedIn = false;
 		selectedE = false;
+		selectedIndex = new ArrayList<Integer>();
+		AllowInIndex = new ArrayList<Integer>();
+		AllowEIndex = new ArrayList<Integer>();
 	}
 	
 	public pod(String namespace, String name, String IP, HashMap<String,String> labels) {
@@ -59,6 +61,9 @@ public class pod{
 		Probes = new ArrayList<probe>();
 		selectedIn = false;
 		selectedE = false;
+		selectedIndex = new ArrayList<Integer>();
+		AllowInIndex = new ArrayList<Integer>();
+		AllowEIndex = new ArrayList<Integer>();
 	}
 
 	public String getType() {
@@ -243,5 +248,29 @@ public class pod{
 
 	public void setProbes(ArrayList<probe> probes) {
 		Probes = probes;
+	}
+
+	public ArrayList<Integer> getSelectedIndex() {
+		return selectedIndex;
+	}
+
+	public void setSelectedIndex(ArrayList<Integer> selectedIndex) {
+		this.selectedIndex = selectedIndex;
+	}
+
+	public ArrayList<Integer> getAllowInIndex() {
+		return AllowInIndex;
+	}
+
+	public void setAllowInIndex(ArrayList<Integer> allowInIndex) {
+		AllowInIndex = allowInIndex;
+	}
+
+	public ArrayList<Integer> getAllowEIndex() {
+		return AllowEIndex;
+	}
+
+	public void setAllowEIndex(ArrayList<Integer> allowEIndex) {
+		AllowEIndex = allowEIndex;
 	}
 }
