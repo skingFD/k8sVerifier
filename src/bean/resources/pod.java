@@ -4,6 +4,7 @@ package bean.resources;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
+import utils.bitsetUtil;
 
 public class pod{
 	String type; //Deployment, DaemonSet, StatefulSet
@@ -194,6 +195,11 @@ public class pod{
 		}
 	}
 	
+	public void removePod(int index) {
+		bitsetUtil.removeBit(this.AllowPodE, index);
+		bitsetUtil.removeBit(this.AllowPodIn, index);
+	}
+	
 	public void andAllowPodE(BitSet allowE) {
 		AllowPodE.and(allowE);
 	}
@@ -272,5 +278,13 @@ public class pod{
 
 	public void setAllowEIndex(ArrayList<Integer> allowEIndex) {
 		AllowEIndex = allowEIndex;
+	}
+	
+	public static void main(String args[]) {
+		BitSet test = new BitSet(2);
+		test.set(0);
+		test.set(2);
+		bitsetUtil.removeBit(test, 1);
+		System.out.print(test);
 	}
 }

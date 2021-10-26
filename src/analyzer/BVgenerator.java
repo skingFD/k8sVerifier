@@ -1,9 +1,12 @@
 package analyzer;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 import bean.KVPair;
 import bean.allowLink;
@@ -17,6 +20,10 @@ import bean.resources.policy;
 import bean.yaml.nsYaml;
 import bean.yaml.podYaml;
 import bean.yaml.policyYaml;
+
+import org.yaml.snakeyaml.Yaml;
+
+import utils.bitsetUtil;
 
 //KV: Key-Value pair
 //BV: BitVector
@@ -42,6 +49,12 @@ public class BVgenerator{
 	bitMatrix ReachabilityMatrix;
 	bitMatrix IntentMatrix;
 	
+	// For incremental operation
+	HashMap<String,BitSet> podLabelHash;
+	HashMap<String,BitSet> nsNameHash;
+	HashMap<String,BitSet> nsLabelHash;
+	ArrayList<String> nsNameList;
+	
 	public BVgenerator() {
 		PolicyYamlList = new ArrayList<policyYaml>();
 		Policies = new ArrayList<policies>();
@@ -59,6 +72,10 @@ public class BVgenerator{
 		AllowNSLength = 0;
 		AllowPodLength = 0;
 		AllowIPLength = 0;
+		podLabelHash = new HashMap<String,BitSet>();
+		nsNameHash = new HashMap<String,BitSet>();
+		nsLabelHash = new HashMap<String,BitSet>();
+		nsNameList = new ArrayList<String>();
 	}
 
 	public ArrayList<policyYaml> getPolicyYamlList() {
@@ -225,9 +242,9 @@ public class BVgenerator{
 		}
 		
 		// Init needed hashmaps
-		HashMap<String,BitSet> podLabelHash = new HashMap<String,BitSet>();
-		HashMap<String,BitSet> nsNameHash = new HashMap<String,BitSet>();
-		HashMap<String,BitSet> nsLabelHash = new HashMap<String,BitSet>();
+		//HashMap<String,BitSet> podLabelHash = new HashMap<String,BitSet>();
+		//HashMap<String,BitSet> nsNameHash = new HashMap<String,BitSet>();
+		//HashMap<String,BitSet> nsLabelHash = new HashMap<String,BitSet>();
 		ArrayList<String> nsNameList = new ArrayList<String>();
 		
 		// Hash pods by namespace, namespace labels and pod labels
@@ -495,8 +512,8 @@ public class BVgenerator{
 			}
 			
 			//Selected: selectedPodsBit
-			//AllowedIn: allowPodsBit
-			//AllowedE: allowPodsBit
+			//AllowedIn: allowPodsInBit
+			//AllowedE: allowPodsEBit
 			for(int j = 0;;) {
 				j = selectedPodsBit.nextSetBit(j);
 				if(j == -1) {
@@ -565,6 +582,405 @@ public class BVgenerator{
 				System.out.println(podfrom.checkAllowE(j) && podto.checkAllowIn(i));
 			}
 		}*/
+	}
+	
+	public void addPod(String fileName) {
+		podYaml podyaml = new podYaml(fileName);
+		this.getPodYamlList().add(podyaml);
+		this.addPod(podyaml.getPod());
+	}
+	
+	public void addPod(pod p) {
+		this.Pods.add(p);
+		int index = this.getPods().size()-1;
+		// Init the new pods' allowE and allowIn bitset
+		this.getPods().get(index).setall(this.getPods().size());
+		
+		// set pod Label hash
+		for(String label : p.getLabels().keySet()) {
+			if(this.podLabelHash.keySet().contains(label)) {
+				this.podLabelHash.get(label).set(index);
+			}else {
+				BitSet newBitSet = new BitSet();
+				newBitSet.set(index);
+				this.podLabelHash.put(label, newBitSet);
+			}
+		}
+		// calculate if selected by policies
+		for(int i = 0; i < this.getPolicies().size(); i++) {
+			if(this.getPolicies().get(i).getNamespace() != p.getNamespace()) {
+				continue;
+			}
+			this.getPolicies().get(i).setSelectedPods(index);
+			for(String Key: this.getPolicies().get(i).getPods().keySet()) {
+				if(!p.getLabels().containsKey(Key)) {
+					this.getPolicies().get(i).clearSelectedPods(index);
+				}
+				if(p.getLabel(Key).equals(this.getPolicies().get(i).getFromPods(Key))) {
+					//If label matched
+				}else {
+					//If label not match
+					this.getPolicies().get(i).clearSelectedPods(index);
+					break;
+				}
+			}
+			if(this.getPolicies().get(i).getSelectedPods().get(index)) {
+				this.getPods().get(index).getSelectedIndex().add(i);
+				p.getAllowPodE().or(this.getPolicies().get(i).getEAllow());
+				p.getAllowPodIn().or(this.getPolicies().get(i).getInAllow());
+			}
+		}
+		// calculate if allowed by policies
+		for(int i = 0; i < this.getPolicies().size(); i++) {
+			// In
+			for(int j = 0; j < this.getPolicies().get(i).getInPolicies().size(); j++ ) {
+				policy inPolicy = this.getPolicies().get(i).getInPolicies().get(j);
+				namespace NS = this.getNamespace(p.getNamespace());
+				inPolicy.calculateAllow(index, p, NS);
+			}
+			// E
+			for(int j = 0; j < this.getPolicies().get(i).getEPolicies().size(); j++ ) {
+				policy ePolicy = this.getPolicies().get(i).getEPolicies().get(j);
+				namespace NS = this.getNamespace(p.getNamespace());
+				ePolicy.calculateAllow(index, p, NS);
+			}
+			this.getPolicies().get(i).calculateBitVector(this.getPods().size());
+			if(this.getPolicies().get(i).getInAllow().get(index)) {
+				this.getPods().get(index).getAllowInIndex().add(i);
+			}
+			if(this.getPolicies().get(i).getEAllow().get(index)) {
+				this.getPods().get(index).getAllowEIndex().add(i);
+			}
+		}
+		// set the corresponding bit in existing pods
+		for(int i = 0; i < this.getPods().size()-1; i++) {
+			ArrayList<Integer> selectedIndex = this.getPods().get(i).getSelectedIndex();
+			for(int policyIndex : selectedIndex) {
+				if(this.getPolicies().get(policyIndex).getEAllow().get(index)) {
+					this.getPods().get(i).getAllowPodE().set(index);
+				}
+				if(this.getPolicies().get(policyIndex).getInAllow().get(index)) {
+					this.getPods().get(i).getAllowPodIn().set(index);
+				}
+			}
+		}
+		//set bit in podlabelHS
+		for(String key : podLabelHash.keySet()) {
+			if(p.getLabels().keySet().contains(key)) {
+				podLabelHash.get(key).set(index);
+			}
+		}
+	}
+	
+	public void addPolicy(String fileName) {
+		policyYaml policyyaml = new policyYaml(fileName);
+		this.getPolicyYamlList().add(policyyaml);
+		this.addPolicy(policyyaml.getPolicies());
+	}
+	
+	public void addPolicy(policies p) {
+		int i = this.Policies.size();
+		this.Policies.add(p);		
+		BitSet selectedPodsBit = new BitSet(this.getPods().size());
+		BitSet allowPodsInBit = new BitSet(this.getPods().size());
+		BitSet allowPodsEBit = new BitSet(this.getPods().size());
+		BitSet tempBit;
+		BitSet tempPolicyBit;
+		BitSet tempNsBit;
+		//Select selected pods by namespace and podlabel
+		if(nsNameHash.get(p.getNamespace())!=null) {
+			selectedPodsBit.or(nsNameHash.get(p.getNamespace()));
+		}
+		for(String Key: p.getPods().keySet()) {
+			if(podLabelHash.get(Key)!=null) {
+				selectedPodsBit.and(podLabelHash.get(Key));
+			}else {
+				selectedPodsBit.clear();
+			}
+		}
+		for(int j = 0;;) {
+			j = selectedPodsBit.nextSetBit(j);
+			if(j==-1) {
+				break;
+			}
+			//get selected pods
+			for(String Key: p.getPods().keySet()) {
+				if(this.getPods().get(j).getLabel(Key).equals(p.getFromPods(Key))) {
+					//If label matched
+				}else {
+					//If label not match
+					selectedPodsBit.clear(j);
+					break;
+				}
+			}
+			j++;
+		}
+		//Set DDP2P map
+		this.getPolicies().get(i).getSelectedPods().or(selectedPodsBit);
+		for(int j = 0;;) {
+			j = selectedPodsBit.nextSetBit(j);
+			if(j==-1) {
+				break;
+			}
+			this.getPods().get(j).getSelectedIndex().add(i);
+			j++;
+		}
+		//Select allow pods by nsLabel and podLabel
+		//In policy
+		for(policy tempPolicy: p.getInPolicies()) {
+			tempNsBit = new BitSet(nsNameList.size());
+			tempPolicyBit = new BitSet(this.getPods().size());
+			tempPolicyBit.set(0, this.getPods().size());
+			for(filter tempFilter: tempPolicy.getFilters()) {
+				if(tempFilter.isHaveNsSelector()) {
+					//Get all possible selected NS
+					for(String Key: tempFilter.getNsSelector().keySet()) {
+						if(nsLabelHash.get(Key)!=null) {
+							tempNsBit.and(nsLabelHash.get(Key));
+						}else {
+							tempNsBit.clear();
+						}
+					}
+					//Get all selected NS
+					for(int j = 0;;) {
+						j = tempNsBit.nextSetBit(j);
+						if(j==-1) {
+							break;
+						}
+						//get allowed pods
+						//use nslabels
+						for(String Key: tempFilter.getNsSelector().keySet()) {
+							if(this.getNamespace(nsNameList.get(j)).getLabel(Key).equals(tempFilter.getNsSelector(Key))) {
+								//If label matched
+							}else {
+								//If label not match
+								tempNsBit.clear(j);
+								break;
+							}
+						}
+						j++;
+					}
+					//Cast NS to pods
+					for(int j = 0;;) {
+						j = tempNsBit.nextSetBit(j);
+						if(j == -1) {
+							break;
+						}
+						tempPolicyBit.or(nsNameHash.get(nsNameList.get(j)));
+						j++;
+					}
+				}else {
+					//If no nsSelector, use name to filter
+					tempPolicyBit.or(nsNameHash.get(p.getNamespace()));
+				}
+				if(tempFilter.isHavePodSelector()) {
+					for(String Key: tempFilter.getPodSelector().keySet()) {
+						if(podLabelHash.get(Key)!=null) {
+							tempPolicyBit.and(podLabelHash.get(Key));
+						}else {
+							tempPolicyBit.clear();
+						}
+					}
+				}
+				for(int j = 0;;) {
+					j = tempPolicyBit.nextSetBit(j);
+					if(j==-1) {
+						break;
+					}
+					//get allowed pods
+					//use labels
+					if(tempFilter.isHavePodSelector()) {
+						for(String Key: tempFilter.getPodSelector().keySet()) {
+							if(this.getPods().get(j).getLabel(Key).equals(tempFilter.getPodSelector(Key))) {
+								//If label matched
+							}else {
+								//If label not match
+								tempPolicyBit.clear(j);
+								break;
+							}
+						}
+					}
+					j++;
+				}
+			}
+			
+			allowPodsInBit.or(tempPolicyBit);
+		}
+			
+		//Set DDP2P Map
+		this.getPolicies().get(i).getInAllow().or(allowPodsInBit);
+		for(int j = 0;;) {
+			j = allowPodsInBit.nextSetBit(j);
+			if(j==-1) {
+				break;
+			}
+			this.getPods().get(j).getAllowInIndex().add(i);
+			j++;
+		}
+			
+		//E policy
+		for(policy tempPolicy: p.getEPolicies()) {
+			tempNsBit = new BitSet(nsNameList.size());
+			tempPolicyBit = new BitSet(this.getPods().size());
+			tempPolicyBit.set(0, this.getPods().size());
+			for(filter tempFilter: tempPolicy.getFilters()) {
+				if(tempFilter.isHaveNsSelector()) {
+					//Get all possible selected NS
+					for(String Key: tempFilter.getNsSelector().keySet()) {
+						if(nsLabelHash.get(Key)!=null) {
+							tempNsBit.and(nsLabelHash.get(Key));
+						}else {
+							tempNsBit.clear();
+						}
+					}
+					//Get all selected NS
+					for(int j = 0;;) {
+						j = tempNsBit.nextSetBit(j);
+						if(j==-1) {
+							break;
+						}
+						//get allowed pods
+						//use nslabels
+						for(String Key: tempFilter.getNsSelector().keySet()) {
+							if(this.getNamespace(nsNameList.get(j)).getLabel(Key).equals(tempFilter.getNsSelector(Key))) {
+								//If label matched
+							}else {
+								//If label not match
+								tempNsBit.clear(j);
+								break;
+							}
+						}
+						j++;
+					}
+					//Cast NS to pods
+					for(int j = 0;;) {
+						j = tempNsBit.nextSetBit(j);
+						if(j == -1) {
+							break;
+						}
+						tempPolicyBit.or(nsNameHash.get(nsNameList.get(j)));
+						j++;
+					}
+				}else {
+					//If no nsSelector, use name to filter
+					tempPolicyBit.or(nsNameHash.get(this.getPolicies().get(i).getNamespace()));
+				}
+				if(tempFilter.isHavePodSelector()) {
+					for(String Key: tempFilter.getPodSelector().keySet()) {
+						if(podLabelHash.get(Key)!=null) {
+							tempPolicyBit.and(podLabelHash.get(Key));
+						}else {
+							tempPolicyBit.clear();
+						}
+					}
+				}
+				for(int j = 0;;) {
+					j = tempPolicyBit.nextSetBit(j);
+					if(j==-1) {
+						break;
+					}
+					//get allowed pods
+					//use labels
+					if(tempFilter.isHavePodSelector()) {
+						for(String Key: tempFilter.getPodSelector().keySet()) {
+							if(this.getPods().get(j).getLabel(Key).equals(tempFilter.getPodSelector(Key))) {
+								//If label matched
+							}else {
+								//If label not match
+								tempPolicyBit.clear(j);
+								break;
+							}
+						}
+					}
+					j++;
+				}
+			}
+			allowPodsEBit.or(tempPolicyBit);
+		}
+		//Set DDP2P Map
+		this.getPolicies().get(i).getEAllow().or(allowPodsEBit);
+		for(int j = 0;;) {
+			j = allowPodsEBit.nextSetBit(j);
+			if(j==-1) {
+				break;
+			}
+			this.getPods().get(j).getAllowEIndex().add(i);
+			j++;
+		}
+			
+		//Selected: selectedPodsBit
+		//AllowedIn: allowPodsInBit
+		//AllowedE: allowPodsEBit
+		for(int j = 0;;) {
+			j = selectedPodsBit.nextSetBit(j);
+			if(j == -1) {
+				break;
+			}
+			if(this.getPolicies().get(i).isHaveIn()) {
+				this.Pods.get(j).setAllowPodIn(allowPodsInBit);
+			}
+			if(this.getPolicies().get(i).isHaveE()) {
+				this.Pods.get(j).setAllowPodE(allowPodsEBit);
+			}
+			j++;
+		}
+	}
+	
+	public void removePod(int index) {
+		this.Pods.remove(index);
+		for(int i = 0; i < this.getPods().size(); i++) {
+			this.getPods().get(i).removePod(index);
+		}
+		for(int i = 0; i < this.getPolicies().size(); i++) {
+			this.getPolicies().get(i).removePod(index);
+		}
+		for(String key : podLabelHash.keySet()) {
+			bitsetUtil.removeBit(podLabelHash.get(key), index);
+		}
+	}
+	
+	public void removePolicy(int index) {
+		// when remove policy, find the pods affected by this policy
+		// and use BCP map to find other policies affecting these pods
+		policies rmPolicy = this.getPolicies().get(index);
+		BitSet rmSelected = rmPolicy.getSelectedPods();
+		BitSet rmInAllow = rmPolicy.getInAllow();
+		BitSet rmEAllow = rmPolicy.getEAllow();
+		
+		for(int i = 0;;) {
+			i = rmSelected.nextSetBit(i);
+			if(i==-1) {
+				break;
+			}
+			pod selectedPod = this.getPods().get(i);
+			// recalculate in allow bitset
+			BitSet InAllow = new BitSet(this.getPods().size());
+			for(int selectIndex : selectedPod.getSelectedIndex()) {
+				InAllow.or(this.getPolicies().get(selectIndex).getInAllow());
+			}
+			this.getPods().get(i).setAllowPodIn(InAllow);
+			//recalculate out allow bitset
+			BitSet EAllow = new BitSet(this.getPods().size());
+			for(int selectIndex : selectedPod.getSelectedIndex()) {
+				EAllow.or(this.getPolicies().get(selectIndex).getEAllow());
+			}
+			this.getPods().get(i).setAllowPodE(EAllow);
+		}
+		// remove the corresponding bit in pod selector and allow
+		for(int i = 0; i < this.getPods().size(); i++) {
+			if(this.getPods().get(i).getSelectedIndex().contains(index)) {
+				this.getPods().get(i).getSelectedIndex().remove(this.getPods().get(i).getSelectedIndex().indexOf(index));
+			}
+			if(this.getPods().get(i).getAllowInIndex().contains(index)) {
+				this.getPods().get(i).getAllowInIndex().remove(this.getPods().get(i).getAllowInIndex().indexOf(index));
+			}
+			if(this.getPods().get(i).getAllowEIndex().contains(index)) {
+				this.getPods().get(i).getAllowEIndex().remove(this.getPods().get(i).getAllowEIndex().indexOf(index));
+			}
+		}
+		// remove policies in global variables
+		this.PolicyYamlList.remove(index);
+		this.Policies.remove(index);
 	}
 	
 	public void setConsistency() {
@@ -687,16 +1103,16 @@ public class BVgenerator{
 	public void userReachableVerifier() {
 		System.out.println("--------\nverfifying userReachable...");
 		// Hash pods by namespace, namespace labels and pod labels
-		HashMap<String, BitSet> nsNameHash = new HashMap<String, BitSet>();
-		for (int i = 0; i < this.getPods().size(); i++) {
-			String nsName = this.getPods().get(i).getNamespace();
-			if (nsNameHash.get(nsName) == null) {
-				nsNameHash.put(nsName, new BitSet());
-				nsNameHash.get(nsName).set(i);
-			} else {
-				nsNameHash.get(nsName).set(i);
-			}
-		}
+		//HashMap<String, BitSet> nsNameHash = new HashMap<String, BitSet>();
+		//for (int i = 0; i < this.getPods().size(); i++) {
+		//	String nsName = this.getPods().get(i).getNamespace();
+		//	if (nsNameHash.get(nsName) == null) {
+		//		nsNameHash.put(nsName, new BitSet());
+		//		nsNameHash.get(nsName).set(i);
+		//	} else {
+		//		nsNameHash.get(nsName).set(i);
+		//	}
+		//}
 		long starttime = System.nanoTime();
 		for(int i = 0; i< this.getPods().size();i++) {
 			BitSet temp = new BitSet();
@@ -708,7 +1124,7 @@ public class BVgenerator{
 			}
 		}
 		long stoptime = System.nanoTime();
-		//System.out.println("tomcat can be reached by other user");		
+		//TODO System.out.println("tomcat can be reached by other user");		
 		//System.out.println("Cost time: " + (stoptime - starttime));
 		//System.out.print((stoptime - starttime)+"\t");
 	}
@@ -773,21 +1189,33 @@ public class BVgenerator{
 		File[] fileList = file.listFiles();
 		for(int i = 0; i < fileList.length; i++) {
 			if(fileList[i].getName().endsWith("yaml")) {
-				if(fileList[i].getName().startsWith("testpolicy")) {
+				Yaml yaml = new Yaml();
+				File f = new File(filePath + fileList[i].getName());
+				LinkedHashMap content = null;
+				try {
+					content = (LinkedHashMap)yaml.load(new FileInputStream(f));
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
+				}
+				String kind = (String)content.get("kind");
+				if(kind.equals("NetworkPolicy")) {
 					policyYaml policyyaml = new policyYaml(filePath + fileList[i].getName());
 					this.getPolicyYamlList().add(policyyaml);
-				}else if(fileList[i].getName().startsWith("testpod")) {
+				}else if(kind.equals("Deployment")) {
 					podYaml podyaml = new podYaml(filePath + fileList[i].getName());
 					this.getPodYamlList().add(podyaml);
-				}else if(fileList[i].getName().startsWith("testns")) {
+				}else if(kind.equals("Namespace")) {
 					nsYaml nsyaml = new nsYaml(filePath + fileList[i].getName());
 					this.getNSYamlList().add(nsyaml);
+				}else {
+					assert(false);
 				}
 			}
 		}
 		this.yaml2Policies();
 		this.yaml2Pods();
 		this.yaml2NS();
+		System.out.print("");
 	}
 	
 	public void tempInit() {
@@ -864,8 +1292,52 @@ public class BVgenerator{
 		}
 	}
 	
-	public static void main(String args[]) {	
-		
+	public static void main(String args[]) {
+		String podInput = "";
+		String nsInput = "";
+		String policyInput = "";
+		boolean allVerify = false;
+		if(args.length == 0) {
+			args = new String[]{"-h"};
+		}
+		for(int i = 0; i < args.length; i++) {
+			if(args[i] == "-h") {
+				System.out.println("Help info");
+				System.out.println("==============================================");
+				System.out.println("Usage:");
+				System.out.println("-h                : print this info");
+				System.out.println("-po/--pod         : set pod config input");
+				System.out.println("-ns/--namespace   : set namespace config input");
+				System.out.println("-pl/--policy      : set policy config input");
+				System.out.println("-all              : all verify");
+				System.out.println("Example:");
+				System.out.println("java Kano.jar -po po.yaml -ns ns.yaml -pl pl.yaml -all");
+			}else if(args[i] == "--pod" || args[i] == "-po") {
+				//read pod file
+				if(i == args.length - 1) {
+					assert false;
+				}
+				podInput = args[i+1];
+				i++;
+			}else if(args[i] == "--namespace" || args[i] == "-ns") {
+				//read ns file
+				if(i == args.length - 1) {
+					assert false;
+				}
+				nsInput = args[i+1];
+				i++;
+			}else if(args[i] == "--policy" || args[i] == "-pl") {
+				//read policy file
+				if(i == args.length - 1) {
+					assert false;
+				}
+				policyInput = args[i+1];
+				i++;
+			}else if(args[i] == "-all") {
+				allVerify = true;
+			}
+		}
+		/*
 		if(args.length!=3){
 			return;
 		}else{	
@@ -885,5 +1357,6 @@ public class BVgenerator{
 			bv2 = null;
 			System.gc();
 		}
+		*/
 	}
 }

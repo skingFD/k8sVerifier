@@ -78,6 +78,8 @@ public class Kano{
 	public static void main(String args[]) {
 		Kano kano = new Kano("examples\\test\\");
 		kano.generateMatrix();
+		kano.bvgenerator.addPolicy("examples\\test_add\\testpolicy_add.yaml");
+		kano.bvgenerator.addPod("examples\\test_add\\testpod_add.yaml");
 		kano.allVerify();
 	}
 }

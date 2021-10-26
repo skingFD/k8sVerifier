@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 
 import bean.KVPair;
 import bean.yaml.policyYaml;
+import utils.bitsetUtil;
 
 /**
  * @author skingFD
@@ -171,6 +172,12 @@ public class policies{
 	
 	public String getFromPods(String key) {
 		return pods.get(key);
+	}
+	
+	public void removePod(int index) {
+		bitsetUtil.removeBit(this.SelectedPods, index);
+		bitsetUtil.removeBit(this.eAllow, index);
+		bitsetUtil.removeBit(this.inAllow, index);
 	}
 
 	public ArrayList<KVPair> getAllowNSList(){
