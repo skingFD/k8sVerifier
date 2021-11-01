@@ -245,7 +245,7 @@ public class BVgenerator{
 		//HashMap<String,BitSet> podLabelHash = new HashMap<String,BitSet>();
 		//HashMap<String,BitSet> nsNameHash = new HashMap<String,BitSet>();
 		//HashMap<String,BitSet> nsLabelHash = new HashMap<String,BitSet>();
-		ArrayList<String> nsNameList = new ArrayList<String>();
+		//ArrayList<String> nsNameList = new ArrayList<String>();
 		
 		// Hash pods by namespace, namespace labels and pod labels
 		for(int i = 0; i < this.getPods().size();i++) {
@@ -332,8 +332,9 @@ public class BVgenerator{
 			//In policy
 			for(policy tempPolicy: this.getPolicies().get(i).getInPolicies()) {
 				tempNsBit = new BitSet(nsNameList.size());
+				tempNsBit.flip(0, nsNameList.size());
 				tempPolicyBit = new BitSet(this.getPods().size());
-				tempPolicyBit.set(0, this.getPods().size());
+				//tempPolicyBit.set(0, this.getPods().size());
 				for(filter tempFilter: tempPolicy.getFilters()) {
 					if(tempFilter.isHaveNsSelector()) {
 						//Get all possible selected NS
@@ -424,8 +425,9 @@ public class BVgenerator{
 			//E policy
 			for(policy tempPolicy: this.getPolicies().get(i).getEPolicies()) {
 				tempNsBit = new BitSet(nsNameList.size());
+				tempNsBit.flip(0, nsNameList.size());
 				tempPolicyBit = new BitSet(this.getPods().size());
-				tempPolicyBit.set(0, this.getPods().size());
+				//tempPolicyBit.set(0, this.getPods().size());
 				for(filter tempFilter: tempPolicy.getFilters()) {
 					if(tempFilter.isHaveNsSelector()) {
 						//Get all possible selected NS
@@ -608,7 +610,7 @@ public class BVgenerator{
 		}
 		// calculate if selected by policies
 		for(int i = 0; i < this.getPolicies().size(); i++) {
-			if(this.getPolicies().get(i).getNamespace() != p.getNamespace()) {
+			if(!this.getPolicies().get(i).getNamespace().equals(p.getNamespace())) {
 				continue;
 			}
 			this.getPolicies().get(i).setSelectedPods(index);
@@ -664,6 +666,27 @@ public class BVgenerator{
 				}
 			}
 		}
+		
+		// set allowIn and allowE of the added pod
+		ArrayList<Integer> selectedIndex = this.getPods().get(index).getSelectedIndex();
+		for(int policyIndex : selectedIndex) {
+			policies tmpPolicy = this.getPolicies().get(policyIndex);
+			if(!this.getPods().get(index).isSelectedIn() && tmpPolicy.isHaveIn()) {
+				this.getPods().get(index).setSelectedIn(true);
+				this.getPods().get(index).getAllowPodIn().clear();
+				this.getPods().get(index).getAllowPodIn().or(tmpPolicy.getInAllow());
+			}else if(tmpPolicy.isHaveIn()) {
+				this.getPods().get(index).getAllowPodIn().or(tmpPolicy.getInAllow());
+			}
+			if(!this.getPods().get(index).isSelectedE() && tmpPolicy.isHaveE()) {
+				this.getPods().get(index).setSelectedE(true);
+				this.getPods().get(index).getAllowPodE().clear();
+				this.getPods().get(index).getAllowPodE().or(tmpPolicy.getEAllow());
+			}else if(tmpPolicy.isHaveIn()) {
+				this.getPods().get(index).getAllowPodE().or(tmpPolicy.getEAllow());
+			}
+		}
+			
 		//set bit in podlabelHS
 		for(String key : podLabelHash.keySet()) {
 			if(p.getLabels().keySet().contains(key)) {
@@ -729,8 +752,9 @@ public class BVgenerator{
 		//In policy
 		for(policy tempPolicy: p.getInPolicies()) {
 			tempNsBit = new BitSet(nsNameList.size());
+			tempNsBit.flip(0,nsNameList.size());
 			tempPolicyBit = new BitSet(this.getPods().size());
-			tempPolicyBit.set(0, this.getPods().size());
+			//tempPolicyBit.set(0, this.getPods().size());
 			for(filter tempFilter: tempPolicy.getFilters()) {
 				if(tempFilter.isHaveNsSelector()) {
 					//Get all possible selected NS
@@ -821,8 +845,9 @@ public class BVgenerator{
 		//E policy
 		for(policy tempPolicy: p.getEPolicies()) {
 			tempNsBit = new BitSet(nsNameList.size());
+			tempNsBit.flip(0,nsNameList.size());
 			tempPolicyBit = new BitSet(this.getPods().size());
-			tempPolicyBit.set(0, this.getPods().size());
+			//tempPolicyBit.set(0, this.getPods().size());
 			for(filter tempFilter: tempPolicy.getFilters()) {
 				if(tempFilter.isHaveNsSelector()) {
 					//Get all possible selected NS
@@ -965,19 +990,53 @@ public class BVgenerator{
 				EAllow.or(this.getPolicies().get(selectIndex).getEAllow());
 			}
 			this.getPods().get(i).setAllowPodE(EAllow);
+			i++;
 		}
 		// remove the corresponding bit in pod selector and allow
 		for(int i = 0; i < this.getPods().size(); i++) {
-			if(this.getPods().get(i).getSelectedIndex().contains(index)) {
-				this.getPods().get(i).getSelectedIndex().remove(this.getPods().get(i).getSelectedIndex().indexOf(index));
+			int rmIndex = -1;
+			for(int j = 0; j < this.getPods().get(i).getSelectedIndex().size(); j++) {
+				if(this.getPods().get(i).getSelectedIndex().get(j) < index) {
+					continue;
+				}else if(this.getPods().get(i).getSelectedIndex().get(j) == index){
+					rmIndex = j;
+				}else {
+					this.getPods().get(i).getSelectedIndex().set(j, this.getPods().get(i).getSelectedIndex().get(j)-1);
+				}
 			}
-			if(this.getPods().get(i).getAllowInIndex().contains(index)) {
-				this.getPods().get(i).getAllowInIndex().remove(this.getPods().get(i).getAllowInIndex().indexOf(index));
+			if(rmIndex != -1) {
+				this.getPods().get(i).getSelectedIndex().remove(rmIndex);
+				rmIndex = -1;
 			}
-			if(this.getPods().get(i).getAllowEIndex().contains(index)) {
-				this.getPods().get(i).getAllowEIndex().remove(this.getPods().get(i).getAllowEIndex().indexOf(index));
+			
+			for(int j = 0; j < this.getPods().get(i).getAllowInIndex().size(); j++) {
+				if(this.getPods().get(i).getAllowInIndex().get(j) < index) {
+					continue;
+				}else if(this.getPods().get(i).getAllowInIndex().get(j) == index){
+					rmIndex = j;
+				}else {
+					this.getPods().get(i).getAllowInIndex().set(j, this.getPods().get(i).getAllowInIndex().get(j)-1);
+				}
+			}
+			if(rmIndex != -1) {
+				this.getPods().get(i).getAllowInIndex().remove(rmIndex);
+				rmIndex = -1;
+			}
+			
+			for(int j = 0; j < this.getPods().get(i).getAllowEIndex().size(); j++) {
+				if(this.getPods().get(i).getAllowEIndex().get(j) < index) {
+					continue;
+				}else if(this.getPods().get(i).getAllowEIndex().get(j) == index){
+					rmIndex = j;
+				}else {
+					this.getPods().get(i).getAllowEIndex().set(j, this.getPods().get(i).getAllowEIndex().get(j)-1);
+				}
+			}
+			if(rmIndex != -1) {
+				this.getPods().get(i).getAllowEIndex().remove(rmIndex);
 			}
 		}
+		// TODO refreash AllowPodE and AllowPodIn, selectedE and selectedIn
 		// remove policies in global variables
 		this.PolicyYamlList.remove(index);
 		this.Policies.remove(index);

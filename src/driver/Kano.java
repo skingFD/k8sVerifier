@@ -40,6 +40,7 @@ public class Kano{
 	
 	public void generateMatrix() {
 		this.bvgenerator.prefilterVerify();
+		this.bvgenerator.calculateAllowMatrixs();
 	}
 	
 	public void allVerify() {
@@ -76,10 +77,15 @@ public class Kano{
 	}
 	
 	public static void main(String args[]) {
+		// When testing incremental verification, you need to check:
+		// 1. policy: selected pods, inAllow, eAllow
+		// 2. pod: selected index, AllowPodE, AllowPodIn, AllowEIndex, AllowInIndex
 		Kano kano = new Kano("examples\\test\\");
 		kano.generateMatrix();
 		kano.bvgenerator.addPolicy("examples\\test_add\\testpolicy_add.yaml");
 		kano.bvgenerator.addPod("examples\\test_add\\testpod_add.yaml");
+		kano.bvgenerator.removePolicy(0);
+		kano.bvgenerator.removePod(0);
 		kano.allVerify();
 	}
 }
