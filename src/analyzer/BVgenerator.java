@@ -656,6 +656,12 @@ public class BVgenerator{
 		}
 		// set the corresponding bit in existing pods
 		for(int i = 0; i < this.getPods().size()-1; i++) {
+			if(!this.getPods().get(i).isSelectedE()) {
+				this.getPods().get(i).getAllowPodE().set(index);
+			}
+			if(!this.getPods().get(i).isSelectedIn()) {
+				this.getPods().get(i).getAllowPodIn().set(index);
+			}
 			ArrayList<Integer> selectedIndex = this.getPods().get(i).getSelectedIndex();
 			for(int policyIndex : selectedIndex) {
 				if(this.getPolicies().get(policyIndex).getEAllow().get(index)) {
@@ -666,6 +672,7 @@ public class BVgenerator{
 				}
 			}
 		}
+
 		
 		// set allowIn and allowE of the added pod
 		ArrayList<Integer> selectedIndex = this.getPods().get(index).getSelectedIndex();
@@ -980,16 +987,36 @@ public class BVgenerator{
 			pod selectedPod = this.getPods().get(i);
 			// recalculate in allow bitset
 			BitSet InAllow = new BitSet(this.getPods().size());
-			for(int selectIndex : selectedPod.getSelectedIndex()) {
-				InAllow.or(this.getPolicies().get(selectIndex).getInAllow());
-			}
-			this.getPods().get(i).setAllowPodIn(InAllow);
-			//recalculate out allow bitset
 			BitSet EAllow = new BitSet(this.getPods().size());
-			for(int selectIndex : selectedPod.getSelectedIndex()) {
-				EAllow.or(this.getPolicies().get(selectIndex).getEAllow());
+			boolean inSelected = false;
+			boolean eSelected = false;
+			for(int selectIndex : selectedPod.getSelectedIndex()){
+				if(selectIndex == index) {
+					continue;
+				}
+				if(this.getPolicies().get(selectIndex).isHaveIn()) {
+					inSelected = true;
+					InAllow.or(this.getPolicies().get(selectIndex).getInAllow());
+				}
+				if(this.getPolicies().get(selectIndex).isHaveE()) {
+					eSelected = true;
+					EAllow.or(this.getPolicies().get(selectIndex).getEAllow());
+				}
 			}
-			this.getPods().get(i).setAllowPodE(EAllow);
+			if(inSelected == true) {
+				this.getPods().get(i).andAllowPodIn(InAllow);
+			}else {
+				InAllow.set(0, this.getPods().size());
+				this.getPods().get(i).setAllowPodIn(InAllow);
+				this.getPods().get(i).setSelectedIn(false);
+			}
+			if(eSelected == true) {
+				this.getPods().get(i).andAllowPodE(EAllow);
+			}else {
+				EAllow.set(0, this.getPods().size());
+				this.getPods().get(i).setAllowPodE(EAllow);
+				this.getPods().get(i).setSelectedE(false);
+			}
 			i++;
 		}
 		// remove the corresponding bit in pod selector and allow
