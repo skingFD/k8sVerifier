@@ -210,6 +210,10 @@ public class BVgenerator{
 	public void setAllowIPLength(int allowIPLength) {
 		AllowIPLength = allowIPLength;
 	}
+	
+	public HashMap<String,BitSet> getPodLabelHash(){
+		return this.podLabelHash;
+	}
 
 	public void yaml2Policies(){
 		for(int i = 0; i < PolicyYamlList.size(); i++) {

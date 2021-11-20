@@ -5,6 +5,7 @@ import java.util.BitSet;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import analyzer.BVgenerator;
 import bean.allowLink;
 import bean.bitMatrix;
 import bean.serviceChain;
@@ -27,13 +28,11 @@ public class Policygenerator{
 	ArrayList<policies> policyList;
 	ArrayList<HashMap<String, String>> policySelectedList;
 	ArrayList<HashMap<String, String>> policyAllowedList;
+	ArrayList<Boolean> policyMerged;
 	ArrayList<pod> podList;
-	ArrayList<namespace> nsList;
+	HashMap<String, namespace> nsList;
 	//input intent
 	ArrayList<allowLink> links;
-	//input reachability matrixs
-	bitMatrix unNeededLinks;
-	bitMatrix neededLinks;
 	HashMap<String, BitSet> podLabelHash;
 	HashSet<String> fixLabels;
 	
@@ -43,10 +42,28 @@ public class Policygenerator{
 		nsYamlList = new ArrayList<nsYaml>();
 		policyList = new ArrayList<policies>();
 		podList = new ArrayList<pod>();
-		nsList = new ArrayList<namespace>();
+		nsList = new HashMap<String, namespace>();
 		links = new ArrayList<allowLink>();
 		podLabelHash = new HashMap<String, BitSet>();
 		fixLabels = new HashSet<String>();
+		this.policySelectedList = new ArrayList<HashMap<String, String>>();
+		this.policyAllowedList = new ArrayList<HashMap<String, String>>();
+		this.policyMerged = new ArrayList<Boolean>();
+	}
+	
+	public Policygenerator(BVgenerator Bg) {
+		this.policyYamlList = Bg.getPolicyYamlList();
+		this.podYamlList = Bg.getPodYamlList();
+		this.nsYamlList = Bg.getNSYamlList();
+		this.policyList = Bg.getPolicies();
+		this.podList = Bg.getPods();
+		this.nsList = Bg.getNamespaces();
+		this.links = new ArrayList<allowLink>();
+		this.podLabelHash = Bg.podLabelHash;
+		this.fixLabels = new HashSet<String>();
+		this.policySelectedList = new ArrayList<HashMap<String, String>>();
+		this.policyAllowedList = new ArrayList<HashMap<String, String>>();
+		this.policyMerged = new ArrayList<Boolean>();
 	}
 	
 	public Policygenerator(Intentanalyzer IntentAnalyzer) {
@@ -59,10 +76,13 @@ public class Policygenerator{
 		nsYamlList = new ArrayList<nsYaml>();
 		policyList = new ArrayList<policies>();
 		podList = new ArrayList<pod>();
-		nsList = new ArrayList<namespace>();
+		nsList = new HashMap<String, namespace>();
 		links = new ArrayList<allowLink>();
 		podLabelHash = new HashMap<String, BitSet>();
 		fixLabels = new HashSet<String>();
+		this.policySelectedList = new ArrayList<HashMap<String, String>>();
+		this.policyAllowedList = new ArrayList<HashMap<String, String>>();
+		this.policyMerged = new ArrayList<Boolean>();
 
 		// initiate pod
 		for(String podyaml: podinput) {
@@ -78,7 +98,7 @@ public class Policygenerator{
 		for(allowLink link: linkinput) {
 			links.add(link);
 		}
-		generate_fix();
+		generateFix();
 	}
 	
 	public ArrayList<policyYaml> getPolicyYamlList() {
@@ -121,11 +141,11 @@ public class Policygenerator{
 		this.podList = podList;
 	}
 
-	public ArrayList<namespace> getNsList() {
+	public HashMap<String, namespace> getNsList() {
 		return nsList;
 	}
 
-	public void setNsList(ArrayList<namespace> nsList) {
+	public void setNsList(HashMap<String, namespace> nsList) {
 		this.nsList = nsList;
 	}
 
@@ -146,29 +166,24 @@ public class Policygenerator{
 		return -1;
 	}
 	
-	public bitMatrix getUnNeededLinks() {
-		return unNeededLinks;
-	}
-
-	public void setUnNeededLinks(bitMatrix unNeededLinks) {
-		this.unNeededLinks = unNeededLinks;
-	}
-
-	public bitMatrix getNeededLinks() {
-		return neededLinks;
-	}
-
-	public void setNeededLinks(bitMatrix neededLinks) {
-		this.neededLinks = neededLinks;
+	public void generateFix() {
+		for(allowLink link : this.getLinks()) {
+			this.generateFixSingle(link);
+		}
 	}
 	
-	public void generateFix(allowLink link) {
+	public void generateFixSingle(allowLink link) {
 		// add a new policy to add a link between Src and Dst
 		// 1. the labels of Src and Dst are unique. Directly add.
 		// 2. if not unique, check whether other pods are already/intently allowed
 		// 3. there is no usable label, add new label and note it is a fix label
 		//    and then ask whether needs to add this label to other pods
 		// 4. there are many links need to be added. Aggregate
+		int policyIndex = policySelectedList.size();
+		policySelectedList.add(new HashMap<String, String>());
+		policyAllowedList.add(new HashMap<String, String>());
+		policyMerged.add(false);
+		
 		int srcIndex = link.getSrcIndex();
 		int dstIndex = link.getDstIndex();
 		// Pod which does not have in or have e should be added to both selected pods
@@ -277,36 +292,42 @@ public class Policygenerator{
 		}
 
 		// add policy
-		for(String key : this.getPodList().get(srcIndex).getLabels().keySet()) {
-			this.policySelectedList.get(srcIndex).put(key, this.getPodList().get(srcIndex).getLabel(key));
-		}
 		for(String key : this.getPodList().get(dstIndex).getLabels().keySet()) {
-			this.policyAllowedList.get(dstIndex).put(key, this.getPodList().get(dstIndex).getLabel(key));
+			this.policySelectedList.get(policyIndex).put(key, this.getPodList().get(dstIndex).getLabel(key));
+		}
+		for(String key : this.getPodList().get(srcIndex).getLabels().keySet()) {
+			this.policyAllowedList.get(policyIndex).put(key, this.getPodList().get(srcIndex).getLabel(key));
 		}
 		if(intersectFlag) {
 			// generate unique fix label
 			if(!(allowedIntersectFlag & (!selectedIntersectFlag))) {
 				String fixSelectLabel = this.generateFixLabel();
 				// add label to select pods and policies
-				this.getPodList().get(srcIndex).addLabel(fixSelectLabel, fixSelectLabel);
-				this.policySelectedList.get(srcIndex).put(fixSelectLabel, fixSelectLabel);
+				this.getPodList().get(dstIndex).addLabel(fixSelectLabel, fixSelectLabel);
+				this.policySelectedList.get(policyIndex).put(fixSelectLabel, fixSelectLabel);
 			}
 			if(allowedIntersectFlag) {
 				String fixAllowLabel = this.generateFixLabel();
 				// add label to allow pods and policies
-				this.getPodList().get(dstIndex).addLabel(fixAllowLabel, fixAllowLabel);
-				this.policyAllowedList.get(dstIndex).put(fixAllowLabel, fixAllowLabel);
+				this.getPodList().get(srcIndex).addLabel(fixAllowLabel, fixAllowLabel);
+				this.policyAllowedList.get(policyIndex).put(fixAllowLabel, fixAllowLabel);
 			}
 		}
 	}
 	
 	public void mergePolicy() {
-		ArrayList<policies> mergedPolicyList = new ArrayList<policies>();
+		// Tmply record the links which will be created by allowed links
+		ArrayList<Boolean> tmpLinks = new ArrayList<Boolean>();
+		for(allowLink link : this.links) {
+			tmpLinks.add(this.getPodList().get(link.getDstIndex()).getAllowPodIn().get(link.getSrcIndex()));
+			this.getPodList().get(link.getDstIndex()).getAllowPodIn().set(link.getSrcIndex());
+		}
+		
 		ArrayList<Integer> mergedIndexs = new ArrayList<Integer>();
 		for(int i = 0; i < this.policySelectedList.size(); i++) {
 			HashMap<String, String> tmpSelected = this.policySelectedList.get(i);
 			HashMap<String, String> tmpAllowed = this.policyAllowedList.get(i);
-			for(int j = i; j < this.policySelectedList.size(); j++) {
+			for(int j = i + 1; j < this.policySelectedList.size(); j++) {
 				if(mergedIndexs.contains(j)) {
 					continue;
 				}
@@ -314,7 +335,7 @@ public class Policygenerator{
 				HashMap<String, String> selected = new HashMap<String, String>();
 				for(String key : tmpSelected.keySet()) {
 					if(otherSelected.keySet().contains(key)) {
-						if(tmpSelected.get(key) == otherSelected.get(key)) {
+						if(tmpSelected.get(key).equals(otherSelected.get(key))) {
 							selected.put(key, tmpSelected.get(key));
 						}
 					}
@@ -325,9 +346,9 @@ public class Policygenerator{
 				HashMap<String, String> otherAllowed = this.policyAllowedList.get(j);
 				HashMap<String, String> allowed = new HashMap<String, String>();
 				for(String key : tmpAllowed.keySet()) {
-					if(otherSelected.keySet().contains(key)) {
-						if(tmpAllowed.get(key) == otherSelected.get(key)) {
-							selected.put(key, tmpAllowed.get(key));
+					if(otherAllowed.keySet().contains(key)) {
+						if(tmpAllowed.get(key).equals(otherAllowed.get(key))) {
+							allowed.put(key, tmpAllowed.get(key));
 						}
 					}
 				}
@@ -386,7 +407,7 @@ public class Policygenerator{
 							break;
 						}
 						for(int l = 0;;) {
-							j = allowedPods.nextSetBit(l);
+							l = allowedPods.nextSetBit(l);
 							if(l == -1 || intersect_flag) {
 								break;
 							}
@@ -401,14 +422,20 @@ public class Policygenerator{
 						tmpSelected = selected;
 						tmpAllowed = allowed;
 						mergedIndexs.add(j);
+						this.policyMerged.set(j, true);
 					}
 				}
 			}
 			this.policyAllowedList.set(i, tmpAllowed);
 			this.policySelectedList.set(i, tmpSelected);
 		}
+		// Reset tmply links
+		for(int i = 0; i < this.links.size(); i++) {
+			allowLink link = this.links.get(i);
+			this.getPodList().get(link.getDstIndex()).getAllowPodIn().set(link.getSrcIndex(), tmpLinks.get(i));
+		}
 	}
-	
+
 	public String generateFixLabel() {
 		String randomStr = "";
 		while(true) {
@@ -421,105 +448,73 @@ public class Policygenerator{
 		return "fix_" + randomStr;
 	}
 	
-	//generate ABAC rules based on intent reachability matrix and \
-	//existing reachability matrix.
-	public void generate_fix() {
-		// 1.set allowpodin and allowpode
-		// 2.record labels need to be attached
-		// 3.attach labels
-		BitSet haveIn = new BitSet(podList.size());
-		BitSet haveE = new BitSet(podList.size());
-		for(int i = 0; i < links.size(); i++) {
-			//record whether have intent, unused now
-			haveIn.set(links.get(i).getDstIndex());
-			haveE.set(links.get(i).getSrcIndex());
-			podList.get(links.get(i).getDstIndex()).getIntentIn().set(links.get(i).getSrcIndex());
-			podList.get(links.get(i).getSrcIndex()).getIntentE().set(links.get(i).getDstIndex());
-		}
+	/**
+	 * Generate policies according to policyAllowedList and policySelectedList
+	 */
+	public void generatePolicies() {
 		//design an algorithm which uses existing label to generate policy
-		for(int i = 0; i < podList.size(); i++) {
-			boolean needPolicy = false;
-			String podKey = randomUtil.getRandomStr(10);
-			String podValue = randomUtil.getRandomStr(10);
-			String NSKey = randomUtil.getRandomStr(10);
-			String NSValue = randomUtil.getRandomStr(10);
-			for(int j = 0; j < podList.size(); j++) {
-				if(podList.get(i).getIntentIn().get(j)) {
-					podList.get(j).addLabel(podKey, podValue);
-					int nsIndex = getNS(podList.get(j).getName());
-					if(nsIndex == -1) {
-						namespace newNS = new namespace(podList.get(j).getName());
-						newNS.addLabel(NSKey, NSValue);
-						nsList.add(newNS);
-					}else {
-						nsList.get(nsIndex).addLabel(NSKey, NSValue);
-					}
-					needPolicy = true;
-				}
+		for(int i = 0; i < this.policyAllowedList.size(); i++) {
+			if(this.policyMerged.get(i)) {
+				continue;
 			}
-			if(needPolicy) {
-				String selectKey = randomUtil.getRandomStr(10);
-				String selectValue = randomUtil.getRandomStr(10);
-				String policyName = randomUtil.getRandomStr(10);
-				podList.get(i).addLabel(selectKey, selectValue); // Attach selector label to pod
-				policies testPolicies = new policies();
-				policy inPolicy = new policy();
-				filter inFilter = new filter(false);
-				filter sysFilter = new filter(false);
-				testPolicies.setHaveIn(true); // Ingress policy
-				testPolicies.setNamespace(podList.get(i).getNamespace()); // Set policy namespace
-				testPolicies.setName(policyName); // Policy name generated randomly
-				testPolicies.putToPods(selectKey, selectValue); // Pod Selector 
-				inFilter.setHaveNsSelector(true);
+			policies testPolicies = new policies();
+			policy inPolicy = new policy();
+			filter inFilter = new filter(false);
+			testPolicies.setHaveIn(true); // Ingress policy
+			testPolicies.setName(this.generateFixLabel());
+			for(String selectKey : this.policySelectedList.get(i).keySet()) {
+				testPolicies.putToPods(selectKey, this.policySelectedList.get(i).get(selectKey));
+			}
+			for(String allowKey : this.policyAllowedList.get(i).keySet()) {
 				inFilter.setHavePodSelector(true);
-				inFilter.putPodSelector(podKey, podValue);
-				inFilter.putNsSelector(NSKey, NSValue);
-				sysFilter.setHaveNsSelector(true);
-				sysFilter.putNsSelector("role", "kube-system"); //XXX: need to attach label to kube-system
-				inPolicy.addToFilters(inFilter);
-				inPolicy.addToFilters(sysFilter);
-				testPolicies.addToIn(inPolicy);
-				policyList.add(testPolicies);
+				inFilter.putPodSelector(allowKey, this.policyAllowedList.get(i).get(allowKey));
 			}
-		}
-		//generate Yamls
-		ArrayList<probe> probeList = new ArrayList<probe>(); // TODO implement probelist
-		for(int i = 0; i < podList.size(); i++) {
-			podYamlList.get(i).addLabels(podList.get(i).getLabels(), probeList);
-		}
-		for(int i = 0; i < policyList.size(); i++) {
-			policyYamlList.add(policyList.get(i).generateYaml());
-		}
-		for(int i = 0; i < nsList.size(); i++) {
-			nsYamlList.add(nsList.get(i).generateYaml());
+			inPolicy.addToFilters(inFilter);
+			
+			//testPolicies.setNamespace(podList.get(i).getNamespace()); // Set policy namespace
+			//testPolicies.putToPods(selectKey, selectValue); // Pod Selector 
+			//inFilter.setHaveNsSelector(true);
+			//inFilter.putNsSelector(NSKey, NSValue);
+			//sysFilter.setHaveNsSelector(true);
+			//sysFilter.putNsSelector("role", "kube-system"); //XXX: need to attach label to kube-system
+			//inPolicy.addToFilters(sysFilter);
+			testPolicies.addToIn(inPolicy);
+			policyList.add(testPolicies);
+			policyYamlList.add(testPolicies.generateYaml());
 		}
 	}
+
 	public static void main(String args[]) {
 		
 		Policygenerator pg = new Policygenerator();
 		// test main function
 
 		// initiate policy
+		for(int i = 0; i < 4; i++) {
+			policyYaml policyyaml = new policyYaml("examples/test/testpolicy" + i + ".yaml");
+			pg.getPolicyYamlList().add(policyyaml);
+			pg.getPolicyList().add(policyyaml.getPolicies());
+		}
 
 		// initiate pod
-		podYaml podyaml1 = new podYaml("testdep1.yaml");
-		podYaml podyaml2 = new podYaml("testdep2.yaml");
-		pg.getPodYamlList().add(podyaml1);
-		pg.getPodYamlList().add(podyaml2);
-		pg.getPodList().add(podyaml1.getPod());
-		pg.getPodList().add(podyaml2.getPod());
+		for(int i = 0; i < 6; i++) {
+			podYaml podyaml = new podYaml("examples/test/testpod" + i + ".yaml");
+			pg.getPodYamlList().add(podyaml);
+			pg.getPodList().add(podyaml.getPod());
+		}
 		
 		// initiate NS
-		nsYaml nsyaml1 = new nsYaml("testns1.yaml");
-		nsYaml nsyaml2 = new nsYaml("testns2.yaml");
-		pg.getNsList().add(nsyaml1.getNS());
-		pg.getNsList().add(nsyaml2.getNS());
+		for(int i = 0; i < 4; i++) {
+			nsYaml nsyaml = new nsYaml("examples/test/testns" + i + ".yaml");
+			pg.getNsYamlList().add(nsyaml);
+			pg.getNsList().put(nsyaml.getNS().getName(), nsyaml.getNS());
+		}
 		
 		// initiate allowLink
 		allowLink alink = new allowLink(0,1,80,false);
 		pg.getLinks().add(alink);
 		
-		pg.generate_fix();
+		pg.generateFix();
 		System.out.println(pg);
 	}
 }

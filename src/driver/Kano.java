@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.ArrayList;
 
 import analyzer.BVgenerator;
+import bean.allowLink;
+import analyzer.Policygenerator;
 
 public class Kano{
 	public String userLabel = "user";
@@ -41,6 +43,17 @@ public class Kano{
 	public void generateMatrix() {
 		this.bvgenerator.prefilterVerify();
 		this.bvgenerator.calculateAllowMatrixs();
+	}
+	
+	public void addLink() {
+		allowLink link0 = new allowLink(0, 4);
+		allowLink link1 = new allowLink(0, 5);
+		Policygenerator pg = new Policygenerator(this.bvgenerator);
+		pg.getLinks().add(link0);
+		pg.getLinks().add(link1);
+		pg.generateFix();
+		pg.mergePolicy();
+		pg.generatePolicies();
 	}
 	
 	public void allVerify() {
@@ -82,10 +95,12 @@ public class Kano{
 		// 2. pod: selected index, AllowPodE, AllowPodIn, AllowEIndex, AllowInIndex
 		Kano kano = new Kano("examples\\test\\");
 		kano.generateMatrix();
-		kano.bvgenerator.addPolicy("examples\\test_add\\testpolicy_add.yaml");
-		kano.bvgenerator.addPod("examples\\test_add\\testpod_add.yaml");
-		kano.bvgenerator.removePolicy(0);
-		kano.bvgenerator.removePod(0);
-		kano.allVerify();
+		kano.addLink();
+		//Incremental
+		//kano.bvgenerator.addPolicy("examples\\test_add\\testpolicy_add.yaml");
+		//kano.bvgenerator.addPod("examples\\test_add\\testpod_add.yaml");
+		//kano.bvgenerator.removePolicy(0);
+		//kano.bvgenerator.removePod(0);
+		//kano.allVerify();
 	}
 }
