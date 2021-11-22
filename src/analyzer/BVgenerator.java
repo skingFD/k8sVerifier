@@ -976,6 +976,13 @@ public class BVgenerator{
 	}
 	
 	public void removePolicy(int index) {
+		this.removePolicy(index, false);
+	}
+	
+	public ArrayList<allowLink> removePolicy(int index, boolean needsReturn) {
+		// Return remove allowLink for fix. If not fix, it can be ignored
+		ArrayList<allowLink> removedLinks = new ArrayList<allowLink>();
+		
 		// when remove policy, find the pods affected by this policy
 		// and use BCP map to find other policies affecting these pods
 		policies rmPolicy = this.getPolicies().get(index);
@@ -1008,15 +1015,49 @@ public class BVgenerator{
 				}
 			}
 			if(inSelected == true) {
+				if(needsReturn) {
+					BitSet tmpBitSet = new BitSet(InAllow.length());
+					tmpBitSet.or(InAllow);
+					tmpBitSet.flip(0, InAllow.length());
+					tmpBitSet.and(this.getPods().get(i).getAllowPodIn());
+					for(int tmp_i = 0;;) {
+						tmp_i = tmpBitSet.nextSetBit(i);
+						if(tmp_i == -1) {
+							break;
+						}
+						removedLinks.add(new allowLink(tmp_i, i));
+						tmp_i++;
+					}
+				}
 				this.getPods().get(i).andAllowPodIn(InAllow);
 			}else {
+				if(needsReturn) {
+					assert false;
+				}
 				InAllow.set(0, this.getPods().size());
 				this.getPods().get(i).setAllowPodIn(InAllow);
 				this.getPods().get(i).setSelectedIn(false);
 			}
 			if(eSelected == true) {
+				if(needsReturn) {
+					BitSet tmpBitSet = new BitSet(EAllow.length());
+					tmpBitSet.or(EAllow);
+					tmpBitSet.flip(0, EAllow.length());
+					tmpBitSet.and(this.getPods().get(i).getAllowPodE());
+					for(int tmp_i = 0;;) {
+						tmp_i = tmpBitSet.nextSetBit(i);
+						if(tmp_i == -1) {
+							break;
+						}
+						removedLinks.add(new allowLink(i, tmp_i));
+						tmp_i++;
+					}
+				}
 				this.getPods().get(i).andAllowPodE(EAllow);
 			}else {
+				if(needsReturn) {
+					assert false;
+				}
 				EAllow.set(0, this.getPods().size());
 				this.getPods().get(i).setAllowPodE(EAllow);
 				this.getPods().get(i).setSelectedE(false);
@@ -1071,6 +1112,7 @@ public class BVgenerator{
 		// remove policies in global variables
 		this.PolicyYamlList.remove(index);
 		this.Policies.remove(index);
+		return removedLinks;
 	}
 	
 	public void setConsistency() {

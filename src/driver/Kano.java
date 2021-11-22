@@ -49,8 +49,8 @@ public class Kano{
 		allowLink link0 = new allowLink(0, 4);
 		allowLink link1 = new allowLink(0, 5);
 		Policygenerator pg = new Policygenerator(this.bvgenerator);
-		pg.getLinks().add(link0);
-		pg.getLinks().add(link1);
+		pg.getAddLinks().add(link0);
+		pg.getAddLinks().add(link1);
 		pg.generateFix();
 		pg.mergePolicy();
 		pg.generatePolicies();
