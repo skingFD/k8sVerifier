@@ -35,6 +35,12 @@ public class podYaml{
 		this.yamlString = yaml.dump(content);
 	}
 	
+	public podYaml(LinkedHashMap content) {
+		this.yaml = new Yaml();
+		this.content = content;
+		this.yamlString = yaml.dump(content);
+	}
+	
 	public String getYamlDump() {
 		this.yamlString = yaml.dump(content);
 		return this.yamlString;

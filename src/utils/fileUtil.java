@@ -1,8 +1,11 @@
 package utils;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 
@@ -220,6 +223,34 @@ public class fileUtil {
 		} catch (Exception e) {
 			System.err.println("write errors :" + e);
 		}
+	}
+	
+	public static ArrayList<String> readKano(String filename) {
+		ArrayList<String> result = new ArrayList<String>();
+		try {
+			File file = new File(filename);
+			if (file.isFile() && file.exists()) {
+				InputStreamReader read = new InputStreamReader(
+						new FileInputStream(file));
+				BufferedReader bufferedReader = new BufferedReader(read);
+				String lineTXT = null;
+				while ((lineTXT = bufferedReader.readLine()) != null) {
+					String clearLine = lineTXT.toString().trim();
+					if(clearLine.startsWith("include")) {
+						result.addAll(readKano(clearLine.split(" ")[1]));
+					}else {
+						result.add(lineTXT.toString().trim());
+					}
+				}
+				read.close();
+			}else{
+			    System.out.println("Can't find file: " + filename);
+			}
+		} catch (Exception e) {
+			System.out.println("Error in reading " + filename);
+			e.printStackTrace();
+		}
+		return result;
 	}
 	
 	public static void main(String args[]) {

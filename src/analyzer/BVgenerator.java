@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 
 import bean.KVPair;
@@ -48,12 +49,17 @@ public class BVgenerator{
 	bitMatrix EMatrix;
 	bitMatrix ReachabilityMatrix;
 	bitMatrix IntentMatrix;
+	//specific not sprase labels. These labels are hashed by value
+	HashSet<String> notSparse;
 	
 	// For incremental operation
 	HashMap<String,BitSet> podLabelHash;
 	HashMap<String,BitSet> nsNameHash;
 	HashMap<String,BitSet> nsLabelHash;
 	ArrayList<String> nsNameList;
+	
+	// whether needs incremental verification
+	boolean running;
 	
 	public BVgenerator() {
 		PolicyYamlList = new ArrayList<policyYaml>();
@@ -76,6 +82,7 @@ public class BVgenerator{
 		nsNameHash = new HashMap<String,BitSet>();
 		nsLabelHash = new HashMap<String,BitSet>();
 		nsNameList = new ArrayList<String>();
+		running = false;
 	}
 
 	public ArrayList<policyYaml> getPolicyYamlList() {
@@ -213,6 +220,20 @@ public class BVgenerator{
 	
 	public HashMap<String,BitSet> getPodLabelHash(){
 		return this.podLabelHash;
+	}
+	
+	public boolean isRunning() {
+		return this.running;
+	}
+	
+	public void addNotSparse(String label){
+		// TODO under runing
+		this.notSparse.add(label);
+	}
+	
+	public void deleteNotSparse(String label) {
+		// TODO under runing
+		this.notSparse.remove(label);
 	}
 
 	public void yaml2Policies(){
@@ -598,6 +619,12 @@ public class BVgenerator{
 	
 	public void addPod(pod p) {
 		this.Pods.add(p);
+		if(this.Pods.size() != this.getPodYamlList().size()) {
+			this.getPodYamlList().add(p.generateYaml());
+		}
+		if(!this.running) {
+			return;
+		}
 		int index = this.getPods().size()-1;
 		// Init the new pods' allowE and allowIn bitset
 		this.getPods().get(index).setall(this.getPods().size());
@@ -714,7 +741,13 @@ public class BVgenerator{
 	
 	public void addPolicy(policies p) {
 		int i = this.Policies.size();
-		this.Policies.add(p);		
+		this.Policies.add(p);
+		if(this.Policies.size() != this.PolicyYamlList.size()) {
+			this.getPolicyYamlList().add(p.generateYaml());
+		}
+		if(!this.running) {
+			return;
+		}
 		BitSet selectedPodsBit = new BitSet(this.getPods().size());
 		BitSet allowPodsInBit = new BitSet(this.getPods().size());
 		BitSet allowPodsEBit = new BitSet(this.getPods().size());
@@ -964,6 +997,10 @@ public class BVgenerator{
 	
 	public void removePod(int index) {
 		this.Pods.remove(index);
+		this.PodYamlList.remove(index);
+		if(!this.running) {
+			return;
+		}
 		for(int i = 0; i < this.getPods().size(); i++) {
 			this.getPods().get(i).removePod(index);
 		}
@@ -982,7 +1019,11 @@ public class BVgenerator{
 	public ArrayList<allowLink> removePolicy(int index, boolean needsReturn) {
 		// Return remove allowLink for fix. If not fix, it can be ignored
 		ArrayList<allowLink> removedLinks = new ArrayList<allowLink>();
-		
+		if(!this.running) {
+			this.PolicyYamlList.remove(index);
+			this.Policies.remove(index);
+			return removedLinks;
+		}
 		// when remove policy, find the pods affected by this policy
 		// and use BCP map to find other policies affecting these pods
 		policies rmPolicy = this.getPolicies().get(index);
@@ -1108,7 +1149,6 @@ public class BVgenerator{
 				this.getPods().get(i).getAllowEIndex().remove(rmIndex);
 			}
 		}
-		// TODO refreash AllowPodE and AllowPodIn, selectedE and selectedIn
 		// remove policies in global variables
 		this.PolicyYamlList.remove(index);
 		this.Policies.remove(index);
@@ -1188,8 +1228,24 @@ public class BVgenerator{
 		IntentMatrix.or(InMatrix);
 		IntentMatrix.and(EMatrix);
 	}
-	
+
 	//Verifiers
+	public void linkVerifier(allowLink link) {
+		System.out.println("--------\nverifying link: " + 
+						   this.getPods().get(link.getSrcIndex()).getName() + 
+						   "===>" + 
+						   this.getPods().get(link.getDstIndex()).getName() + "...");
+		long starttime = System.nanoTime();
+		if(!this.getPods().get(link.getDstIndex()).getAllowPodIn().get(link.getSrcIndex())) {
+			System.out.println(this.getPods().get(link.getSrcIndex()).getName() + 
+							   "cannot reach" + 
+							   this.getPods().get(link.getDstIndex()).getName());
+		}
+		long stoptime = System.nanoTime();
+		//System.out.println("Cost time: " + (stoptime - starttime));
+		//System.out.print((stoptime - starttime)+"\t");
+	}
+	
 	public void allReachableVerifier() {
 		System.out.println("--------\nverfifying allReachable...");
 		long starttime = System.nanoTime();

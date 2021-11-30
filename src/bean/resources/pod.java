@@ -4,6 +4,9 @@ package bean.resources;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+
+import bean.yaml.podYaml;
 import utils.bitsetUtil;
 
 public class pod{
@@ -11,6 +14,7 @@ public class pod{
 	String namespace;//TODO how to get the info of NS
 	String name;
 	String IP;//TODO how to calculate IP
+	int replicas;
 	int port;
 	HashMap<String,String> labels;
 //	BitSet SelectorNS;
@@ -36,6 +40,8 @@ public class pod{
 		namespace = "default";
 		name = "";
 		IP = "0.0.0.0";
+		replicas = 1;
+		port = 0;
 		labels = new HashMap<String,String>();
 		IntentIn = new BitSet();
 		IntentE = new BitSet();
@@ -54,6 +60,8 @@ public class pod{
 		this.namespace = namespace;
 		this.name = name;
 		this.IP = IP;
+		replicas = 1;
+		port = 0;
 		this.labels = labels;
 		IntentIn = new BitSet();
 		IntentE = new BitSet();
@@ -278,6 +286,67 @@ public class pod{
 
 	public void setAllowEIndex(ArrayList<Integer> allowEIndex) {
 		AllowEIndex = allowEIndex;
+	}
+	/**
+	 * generate Yaml from policies
+	 * @return generated Yaml
+	 */
+	public podYaml generateYaml() {
+		LinkedHashMap result = new LinkedHashMap();
+		//apiVersion and kind
+		result.put("apiVersion", "apps/v1");
+		result.put("kind", "Deployment");
+		//metadata
+		LinkedHashMap metadata = new LinkedHashMap();
+		metadata.put("name", this.name);
+		metadata.put("namespace", this.namespace);
+		
+		
+		//spec
+		LinkedHashMap spec = new LinkedHashMap();
+		//spec.replicas
+		spec.put("replicas", this.replicas);
+		//spec.selector
+		LinkedHashMap selector = new LinkedHashMap();
+		//spec.selector.matchLabels
+		LinkedHashMap selectorLabels = new LinkedHashMap();
+		for(String key: this.labels.keySet()) {
+			selectorLabels.put(key, this.labels.get(key));
+		}
+		selector.put("matchLabels", selectorLabels);
+		//spec.template
+		LinkedHashMap template = new LinkedHashMap();
+		//spec.template.metadata
+		LinkedHashMap tmpMetadata = new LinkedHashMap();
+		//spec.template.metadata.labels
+		LinkedHashMap tmpMetadataLabels = new LinkedHashMap();
+		for(String key: this.labels.keySet()) {
+			tmpMetadataLabels.put(key, this.labels.get(key));
+		}
+		metadata.put("labels", tmpMetadataLabels);
+		
+		//spec.template.spec
+		LinkedHashMap tmpSpec = new LinkedHashMap();
+		//spec.template.spec.containers
+		ArrayList<LinkedHashMap> tmpSpecContainers = new ArrayList<LinkedHashMap>();
+		LinkedHashMap container = new LinkedHashMap();
+		container.put("name", "your_container_name");
+		container.put("image", "your_image_name");
+		
+		tmpSpecContainers.add(container);
+		tmpSpec.put("containers", tmpSpecContainers);
+		
+		template.put("metadata", tmpMetadata);
+		template.put("spec", tmpSpec);
+		// package spec
+		spec.put("selector", selector);
+		spec.put("template", template);
+		
+		// package result
+		result.put("metadata", metadata);
+		result.put("spec", spec);
+		
+		return new podYaml(result);
 	}
 	
 	public static void main(String args[]) {
