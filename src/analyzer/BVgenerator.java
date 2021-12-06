@@ -243,14 +243,22 @@ public class BVgenerator{
 		}
 	}
 	
-	public void yaml2Pods() {
+	public void yaml2Pods(boolean hasNS) {
 		for(int i = 0; i < PodYamlList.size(); i++) {
 			podYaml temp = PodYamlList.get(i);
-			Pods.add(temp.getPod());
+			pod tmpPod = temp.getPod();
+			if(!hasNS) {
+				tmpPod.setNamespace("default");
+			}
+			Pods.add(tmpPod);
 		}
 	}
 	
-	public void yaml2NS() {
+	public void yaml2NS(boolean hasNS) {
+		if(!hasNS) {
+			Namespaces.put("default", new namespace("default"));
+			return;
+		}
 		for(int i = 0; i < NSYamlList.size(); i++) {
 			nsYaml temp = NSYamlList.get(i);
 			Namespaces.put(temp.getNS().getName(),temp.getNS());
@@ -556,6 +564,9 @@ public class BVgenerator{
 			}
 			//calculateAllowMatrixs();
 		}
+
+		// set runing, ready for incremental verification
+		this.running = true;
 	}
 	
 	/**
@@ -600,6 +611,8 @@ public class BVgenerator{
 			}
 		}
 
+		// set runing, ready for incremental verification
+		this.running = true;
 		/*for (int i = 0; i < this.Pods.size(); i++) {
 			for (int j = 0; j < this.Pods.size(); j++) {
 				pod podfrom = this.Pods.get(i);
@@ -1401,8 +1414,8 @@ public class BVgenerator{
 			}
 		}
 		this.yaml2Policies();
-		this.yaml2Pods();
-		this.yaml2NS();
+		this.yaml2Pods(true);
+		this.yaml2NS(true);
 		System.out.print("");
 	}
 	
@@ -1426,11 +1439,11 @@ public class BVgenerator{
 		}
 
 		this.yaml2Policies();
-		this.yaml2Pods();
-		this.yaml2NS();
+		this.yaml2Pods(true);
+		this.yaml2NS(true);
 		long starttime = System.nanoTime();
 		this.naiveVerify();
-		// bvg.prefilterVerify();
+		//this.prefilterVerify();
 		long stoptime = System.nanoTime();
 		// bvg.calculateAllowMatrixs();
 
@@ -1445,7 +1458,7 @@ public class BVgenerator{
 		}
 
 		// initiate pod
-		for (int i = 0; i < policyNum; i++) {
+		for (int i = 0; i < podNum; i++) {
 			podYaml podyaml = new podYaml("examples/test"+podNum+"_"+nsNum+"_"+policyNum+"/testpod" + i + ".yaml");
 			this.getPodYamlList().add(podyaml);
 		}
@@ -1457,8 +1470,8 @@ public class BVgenerator{
 		}
 
 		this.yaml2Policies();
-		this.yaml2Pods();
-		this.yaml2NS();
+		this.yaml2Pods(true);
+		this.yaml2NS(true);
 		//System.out.println("Generating reachability matrix...");
 		//long starttime = System.nanoTime();
 		//bvg.naiveVerify();
@@ -1478,6 +1491,35 @@ public class BVgenerator{
 			Runtime run = Runtime.getRuntime();
 			System.out.println(run.totalMemory()-run.freeMemory());
 		}
+	}
+	
+	public void tempInitPods(int podNum, int nsNum, int policyNum) {
+		// initiate policy
+		/*for (int i = 0; i < policyNum; i++) {
+			policyYaml policyyaml = new policyYaml("examples/test"+podNum+"_"+nsNum+"_"+policyNum+"/testpolicy" + i + ".yaml");
+			this.getPolicyYamlList().add(policyyaml);
+		}*/
+
+		// initiate pod
+		for (int i = 0; i < podNum; i++) {
+			podYaml podyaml = new podYaml("examples/test"+podNum+"_"+nsNum+"_"+policyNum+"/testpod" + i + ".yaml");
+			this.getPodYamlList().add(podyaml);
+		}
+
+		// initiate NS
+		for (int i = 0; i < nsNum; i++) {
+			nsYaml nsyaml = new nsYaml("examples/test"+podNum+"_"+nsNum+"_"+policyNum+"/testns" + i + ".yaml");
+			this.getNSYamlList().add(nsyaml);
+		}
+		
+		this.yaml2Policies();
+		this.yaml2Pods(false);
+		this.yaml2NS(false);
+		
+		System.out.println("Generating reachability matrix...");
+		this.prefilterVerify();
+		System.out.println("Finished generating reachability matrix");
+		
 	}
 	
 	public static void main(String args[]) {

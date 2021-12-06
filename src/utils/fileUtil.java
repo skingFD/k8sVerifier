@@ -8,6 +8,12 @@ import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.HashSet;
+
+import analyzer.BVgenerator;
+import analyzer.Policygenerator;
+import bean.allowLink;
+import bean.yaml.policyYaml;
 
 public class fileUtil {
 	public static int podLimit = 1000;
@@ -253,7 +259,7 @@ public class fileUtil {
 		return result;
 	}
 	
-	public static void main(String args[]) {
+	public static void generateRandomConfigs() {
 		for(int i = 0; i < podLimit; i++) {
 			generateRandomPod("testpod" + i + ".yaml",i);
 		}
@@ -263,5 +269,53 @@ public class fileUtil {
 		for(int i = 0; i < policyLimit; i++) {
 			generateRandomPolicy("testpolicy" + i +".yaml",i);
 		}
+	}
+	
+	public static void generateNotSparse(int podNum, int nsNum, int policyNum) {
+		BVgenerator bg = new BVgenerator();
+		bg.tempInitPods(podNum, nsNum, policyNum);
+		Policygenerator pg = new Policygenerator(bg);
+		int linkNum = podNum*podNum;
+		HashSet<Integer> delLinks = new HashSet<Integer>();
+		//for(int i = 0; i < linkNum/2; i++) {
+		for(int i = 0; i < 9900; i++) {
+				int newLink = randomUtil.getRandomInt(0, linkNum);
+			while(delLinks.contains(newLink)) {
+				newLink = randomUtil.getRandomInt(0, linkNum);
+			}
+			delLinks.add(newLink);
+		}
+		for(int delLink : delLinks) {
+			allowLink link = new allowLink(delLink%podNum, delLink/podNum);
+			pg.getDelLinks().add(link);
+		}
+		pg.generateFix();
+		pg.mergePolicy();
+		pg.generatePolicies();
+		for(int i = 0; i < bg.getPolicyYamlList().size(); i++) {
+			policyYaml p = bg.getPolicyYamlList().get(i);
+			try {
+				File pFile = new File("examples/policy" + podNum + 
+									"_" + nsNum + 
+									"_" + policyNum + 
+									"/testpolicy" + i + ".yaml");
+				
+				pFile.createNewFile();
+				BufferedWriter bw = new BufferedWriter(
+							new OutputStreamWriter(new FileOutputStream(pFile), "UTF-8"));
+				bw.write(p.getYamlDump());
+				bw.close();
+			} catch (Exception e) {
+				System.err.println("write errors :" + e);
+			}
+		}
+		System.out.print("");
+	}
+	
+	public static void main(String args[]) {
+		int podNum = 100;
+		int nsNum = 5;
+		int policyNum = 50;
+		generateNotSparse(podNum, nsNum, policyNum);
 	}
 }

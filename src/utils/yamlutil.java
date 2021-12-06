@@ -12,6 +12,7 @@ import analyzer.Policygenerator;
 import bean.allowLink;
 
 public class yamlutil{
+	/*
 	public static Policygenerator analyzeIntent(String intentYaml) {
 		Yaml yaml = new Yaml();
 		File f = new File(intentYaml);
@@ -50,6 +51,7 @@ public class yamlutil{
 		}
 		return new Policygenerator(podList,linkList);
 	}
+	*/
 	public static void main(String args[]) {
 		Yaml yaml = new Yaml();
 		File f = new File("test.yaml");
