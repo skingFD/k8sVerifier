@@ -292,13 +292,13 @@ public class fileUtil {
 		pg.generateFix();
 		pg.mergePolicy();
 		pg.generatePolicies();
-		for(int i = 0; i < bg.getPolicyYamlList().size(); i++) {
+		for(int i = podNum; i < bg.getPolicyYamlList().size(); i++) {
 			policyYaml p = bg.getPolicyYamlList().get(i);
 			try {
 				File pFile = new File("examples/policy" + podNum + 
 									"_" + nsNum + 
 									"_" + policyNum + 
-									"/testpolicy" + i + ".yaml");
+									"/testpolicy" + (i-podNum) + ".yaml");
 				
 				pFile.createNewFile();
 				BufferedWriter bw = new BufferedWriter(

@@ -257,6 +257,7 @@ public class BVgenerator{
 	public void yaml2NS(boolean hasNS) {
 		if(!hasNS) {
 			Namespaces.put("default", new namespace("default"));
+			Namespaces.get("default").addLabel("name", "default");
 			return;
 		}
 		for(int i = 0; i < NSYamlList.size(); i++) {
@@ -1453,30 +1454,30 @@ public class BVgenerator{
 	public void tempInit2(int podNum, int nsNum, int policyNum) {
 		// initiate policy
 		for (int i = 0; i < policyNum; i++) {
-			policyYaml policyyaml = new policyYaml("examples/test"+podNum+"_"+nsNum+"_"+policyNum+"/testpolicy" + i + ".yaml");
+			policyYaml policyyaml = new policyYaml("examples/policy"+podNum+"_"+nsNum+"_"+policyNum+"/testpolicy" + i + ".yaml");
 			this.getPolicyYamlList().add(policyyaml);
 		}
 
 		// initiate pod
 		for (int i = 0; i < podNum; i++) {
-			podYaml podyaml = new podYaml("examples/test"+podNum+"_"+nsNum+"_"+policyNum+"/testpod" + i + ".yaml");
+			podYaml podyaml = new podYaml("examples/policy"+podNum+"_"+nsNum+"_"+policyNum+"/testpod" + i + ".yaml");
 			this.getPodYamlList().add(podyaml);
 		}
 
 		// initiate NS
 		for (int i = 0; i < nsNum; i++) {
-			nsYaml nsyaml = new nsYaml("examples/test"+podNum+"_"+nsNum+"_"+policyNum+"/testns" + i + ".yaml");
+			nsYaml nsyaml = new nsYaml("examples/policy"+podNum+"_"+nsNum+"_"+policyNum+"/testns" + i + ".yaml");
 			this.getNSYamlList().add(nsyaml);
 		}
 
 		this.yaml2Policies();
-		this.yaml2Pods(true);
-		this.yaml2NS(true);
+		this.yaml2Pods(false);
+		this.yaml2NS(false);
 		//System.out.println("Generating reachability matrix...");
 		//long starttime = System.nanoTime();
 		//bvg.naiveVerify();
-		//this.prefilterVerify();
-		this.naiveVerify();
+		this.prefilterVerify();
+		//this.naiveVerify();
 		//long stoptime = System.nanoTime();
 		// bvg.calculateAllowMatrixs();
 		//System.out.println("Cost time: " + (stoptime - starttime));

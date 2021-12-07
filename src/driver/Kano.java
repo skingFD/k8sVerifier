@@ -93,14 +93,16 @@ public class Kano{
 		// When testing incremental verification, you need to check:
 		// 1. policy: selected pods, inAllow, eAllow
 		// 2. pod: selected index, AllowPodE, AllowPodIn, AllowEIndex, AllowInIndex
-		Kano kano = new Kano("examples\\test\\");
-		kano.generateMatrix();
-		kano.addLink();
+		//Kano kano = new Kano("examples\\test\\");
+		//kano.generateMatrix();
+		//kano.addLink();
 		//Incremental
 		//kano.bvgenerator.addPolicy("examples\\test_add\\testpolicy_add.yaml");
 		//kano.bvgenerator.addPod("examples\\test_add\\testpod_add.yaml");
 		//kano.bvgenerator.removePolicy(0);
 		//kano.bvgenerator.removePod(0);
 		//kano.allVerify();
+		BVgenerator bg = new BVgenerator();
+		bg.tempInit2(100, 5, 98);
 	}
 }
