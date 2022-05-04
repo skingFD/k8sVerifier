@@ -1504,24 +1504,24 @@ public class BVgenerator{
 		}
 	}
 	
-	public void tempFullComparison(int podNum, int nsNum, int policyNum, boolean naive) {
+	public void tempFullComparison(int podNum, int keyNum, int policyNum, boolean naive) {
 		Runtime run = Runtime.getRuntime();
 		long startmemory = run.totalMemory()-run.freeMemory();
 		// initiate policy
 		for (int i = 0; i < policyNum; i++) {
-			policyYaml policyyaml = new policyYaml("examples/full_compare/test"+podNum+"_"+nsNum+"_"+policyNum+"/testpolicy" + i + ".yaml");
+			policyYaml policyyaml = new policyYaml("examples/full_compare/test"+podNum+"_"+keyNum+"_"+keyNum+"/testpolicy" + i + ".yaml");
 			this.getPolicyYamlList().add(policyyaml);
 		}
 
 		// initiate pod
 		for (int i = 0; i < podNum; i++) {
-			podYaml podyaml = new podYaml("examples/full_compare/test"+podNum+"_"+nsNum+"_"+policyNum+"/testpod" + i + ".yaml");
+			podYaml podyaml = new podYaml("examples/full_compare/test"+podNum+"_"+keyNum+"_"+keyNum+"/testpod" + i + ".yaml");
 			this.getPodYamlList().add(podyaml);
 		}
 
 		// initiate NS
 		for (int i = 0; i < 1; i++) {
-			nsYaml nsyaml = new nsYaml("examples/full_compare/test"+podNum+"_"+nsNum+"_"+policyNum+"/testns" + i + ".yaml");
+			nsYaml nsyaml = new nsYaml("examples/full_compare/test"+podNum+"_"+keyNum+"_"+keyNum+"/testns" + i + ".yaml");
 			this.getNSYamlList().add(nsyaml);
 		}
 
@@ -1535,6 +1535,7 @@ public class BVgenerator{
 			this.naiveVerify();
 			long stoptime = System.nanoTime();
 			long stopmemory = run.totalMemory()-run.freeMemory();
+			System.out.println("time(nano): \t  memory(B): ");
 			System.out.println((stoptime-starttime) + "\t" + (stopmemory-startmemory));
 			run.gc();
 		}else {
@@ -1542,6 +1543,7 @@ public class BVgenerator{
 			this.prefilterVerify();
 			long stoptime = System.nanoTime();
 			long stopmemory = run.totalMemory()-run.freeMemory();
+			System.out.println("time(nano): \t  memory(B): ");
 			System.out.println((stoptime-starttime) + "\t" + (stopmemory-startmemory));
 			for(int i = 0; i< 5; i++) {
 				this.allReachableVerifier();
@@ -1599,22 +1601,22 @@ public class BVgenerator{
 		}*/
 	}
 	
-	public void tempInitIncre(int podNum, int nsNum, int policyNum) {
+	public void tempInitIncre(int podNum, int keyNum, int policyNum) {
 		// initiate policy
 		for (int i = 0; i < policyNum - 10; i++) {
-			policyYaml policyyaml = new policyYaml("examples/full_compare/test" + podNum + "_" + nsNum + "_" + policyNum + "/testpolicy" + i + ".yaml");
+			policyYaml policyyaml = new policyYaml("examples/full_compare/test" + podNum + "_" + keyNum + "_" + keyNum + "/testpolicy" + i + ".yaml");
 			this.getPolicyYamlList().add(policyyaml);
 		}
 
 		// initiate pod
 		for (int i = 0; i < podNum - 10; i++) {
-			podYaml podyaml = new podYaml("examples/full_compare/test" + podNum + "_" + nsNum + "_" + policyNum + "/testpod" + i + ".yaml");
+			podYaml podyaml = new podYaml("examples/full_compare/test" + podNum + "_" + keyNum + "_" + keyNum + "/testpod" + i + ".yaml");
 			this.getPodYamlList().add(podyaml);
 		}
 
 		// initiate NS
 		for (int i = 0; i < 1; i++) {
-			nsYaml nsyaml = new nsYaml("examples/full_compare/test"+ podNum + "_" + nsNum + "_" + policyNum + "/testns" + i + ".yaml");
+			nsYaml nsyaml = new nsYaml("examples/full_compare/test"+ podNum + "_" + keyNum + "_" + keyNum + "/testns" + i + ".yaml");
 			this.getNSYamlList().add(nsyaml);
 		}
 
@@ -1632,14 +1634,14 @@ public class BVgenerator{
 		System.out.println("Add Policy Cost time: ");
 		for (int i = policyNum - 10; i < policyNum; i++) {
 			long starttime = System.nanoTime();
-			this.addPolicy("examples/full_compare/test" + podNum + "_" + nsNum + "_" + policyNum + "/testpolicy" + i + ".yaml");
+			this.addPolicy("examples/full_compare/test" + podNum + "_" + keyNum + "_" + keyNum + "/testpolicy" + i + ".yaml");
 			long stoptime = System.nanoTime();
 			System.out.println(stoptime - starttime);
 		}
 		System.out.println("Add Pod Cost time: ");
 		for (int i = podNum - 10; i < podNum; i++) {
 			long starttime = System.nanoTime();
-			this.addPod("examples/full_compare/test" + podNum + "_" + nsNum + "_" + policyNum + "/testpod" + i + ".yaml");
+			this.addPod("examples/full_compare/test" + podNum + "_" + keyNum + "_" + keyNum + "/testpod" + i + ".yaml");
 			long stoptime = System.nanoTime();
 			System.out.println(stoptime - starttime);
 		}

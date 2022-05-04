@@ -12,13 +12,18 @@ import utils.fileUtil;
 
 public class chainUtil{
 	public static int userNum = 100;
-	public static int podNum = 500;
-	public static int keyNum = 50;
+	public static int podNum = 10000;
+	public static int keyNum = 100;
 	public static int podIndex = 0;
 	public static int polIndex = 0;
 	public static ArrayList<pod> podList = new ArrayList<pod>();
 	public static ArrayList<policies> policyList = new ArrayList<policies>();
-	public static void generateServiceChain() {
+	public static void generateServiceChain(int tmpUserNum, int tmpPodNum) {
+		userNum = tmpUserNum;
+		podNum = tmpPodNum;
+		keyNum = tmpUserNum;
+		fileUtil.dic = "examples/full_compare/test" + podNum + "_" + userNum + "_" + userNum + "/";
+		
 		while(podList.size() < podNum) {
 			int chainIndex = randomUtil.getRandomInt(0, 8);
 			if(chainIndex == 0) {
@@ -41,14 +46,14 @@ public class chainUtil{
 				assert false;
 			}
 		}
-		for(pod p : podList) {
-			fileUtil.writeResource(p, p.getName() + ".yaml");
+		for(int i = 0; i < podList.size(); i++) {
+			fileUtil.writeResource(podList.get(i), "testpod" + i + ".yaml");
 		}
-		for(policies p : policyList) {
-			fileUtil.writeResource(p, p.getName() + ".yaml");
+		for(int i = 0; i < policyList.size(); i++) {
+			fileUtil.writeResource(policyList.get(i), "testpolicy" + i + ".yaml");
 		}
 		namespace n = new namespace("default");
-		fileUtil.writeResource(n, "namespace.yaml");
+		fileUtil.writeResource(n, "testns0.yaml");
 		return;
 	}
 	
@@ -676,6 +681,13 @@ public class chainUtil{
 	}
 
 	public static void main(String args[]) {
-		generateServiceChain();
+		generateServiceChain(5, 500);
+		generateServiceChain(10, 1000);
+		generateServiceChain(20, 2000);
+		generateServiceChain(50, 5000);
+		generateServiceChain(100, 10000);
+		generateServiceChain(200, 20000);
+		generateServiceChain(500, 50000);
+		generateServiceChain(1000, 100000);
 	}
 }

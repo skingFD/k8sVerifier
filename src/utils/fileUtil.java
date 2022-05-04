@@ -32,11 +32,11 @@ public class fileUtil {
 	public static int policySelectLabelLimit = 2;
 	public static int policyNsLabelLimit = 1;
 	public static int policyPodLabelLimit = 2;
-	public static String dic = "";
+	public static String dic = "examples/full_compare/test10000_100_100/";
 	public static void writeFile(String fileName) {
 		try {
 			BufferedWriter bw = new BufferedWriter(
-					new OutputStreamWriter(new FileOutputStream(new File("examples/test_dic/" + fileName)), "UTF-8"));
+					new OutputStreamWriter(new FileOutputStream(new File(dic + fileName)), "UTF-8"));
 			bw.write("test0");
 			bw.newLine();
 			bw.write("test1");
@@ -49,7 +49,7 @@ public class fileUtil {
 	public static void writeResource(pod p, String fileName) {
 		try {
 			BufferedWriter bw = new BufferedWriter(
-					new OutputStreamWriter(new FileOutputStream(new File("examples/test_dic/" + fileName)), "UTF-8"));
+					new OutputStreamWriter(new FileOutputStream(new File(dic + fileName)), "UTF-8"));
 			bw.write(p.generateYaml().getYamlDump());
 			bw.close();
 		} catch (Exception e) {
@@ -60,7 +60,7 @@ public class fileUtil {
 	public static void writeResource(policies p, String fileName) {
 		try {
 			BufferedWriter bw = new BufferedWriter(
-					new OutputStreamWriter(new FileOutputStream(new File("examples/test_dic/" + fileName)), "UTF-8"));
+					new OutputStreamWriter(new FileOutputStream(new File(dic + fileName)), "UTF-8"));
 			bw.write(p.generateYaml().getYamlDump());
 			bw.close();
 		} catch (Exception e) {
@@ -71,7 +71,7 @@ public class fileUtil {
 	public static void writeResource(namespace n, String fileName) {
 		try {
 			BufferedWriter bw = new BufferedWriter(
-					new OutputStreamWriter(new FileOutputStream(new File("examples/test_dic/" + fileName)), "UTF-8"));
+					new OutputStreamWriter(new FileOutputStream(new File(dic + fileName)), "UTF-8"));
 			bw.write(n.generateYaml().getYamlDump());
 			bw.close();
 		} catch (Exception e) {

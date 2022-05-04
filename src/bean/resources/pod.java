@@ -323,7 +323,7 @@ public class pod{
 		for(String key: this.labels.keySet()) {
 			tmpMetadataLabels.put(key, this.labels.get(key));
 		}
-		metadata.put("labels", tmpMetadataLabels);
+		tmpMetadata.put("labels", tmpMetadataLabels);
 		
 		//spec.template.spec
 		LinkedHashMap tmpSpec = new LinkedHashMap();

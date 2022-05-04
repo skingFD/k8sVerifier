@@ -135,9 +135,9 @@ public class Kano{
 		 */
 		
 		BVgenerator bg = new BVgenerator();
-		/*int[] podNum = {500, 1000, 2000, 5000, 10000, 20000, 50000, 100000};
-		int[] policyNum = {200, 500, 1000, 2000, 5000, 10000, 20000, 50000};
-		for(int i = 0; i< 8; i++) {
+		int[] podNum = {10000, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000};
+		int[] policyNum = {6811, 339, 500, 1000, 2000, 5000, 10000, 20000, 50000};
+		for(int i = 0; i< 1; i++) {
 			int pod = podNum[i];
 			int policy = policyNum[i];
 			System.out.println("Pod Num: " + pod);
@@ -146,10 +146,10 @@ public class Kano{
 			bg.tempFullComparison(pod, pod/100, policy, true);
 			System.out.println("Prefil and verifier:");
 			bg.tempFullComparison(pod, pod/100, policy, false);
-		}*/
+		}
 		
-		System.out.println("Prefil and verifier:");
-		bg.tempInitIncre(150000, 1500, 75000);
+		//System.out.println("Prefil and verifier:");
+		//bg.tempInitIncre(150000, 1500, 75000);
 		
 		/**
 		 * Incre and fix
