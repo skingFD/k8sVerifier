@@ -25,6 +25,7 @@ import bean.yaml.policyYaml;
 import org.yaml.snakeyaml.Yaml;
 
 import utils.bitsetUtil;
+import utils.randomUtil;
 
 //KV: Key-Value pair
 //BV: BitVector
@@ -236,10 +237,16 @@ public class BVgenerator{
 		this.notSparse.remove(label);
 	}
 
-	public void yaml2Policies(){
+	public void yaml2Policies(boolean hasNS){
 		for(int i = 0; i < PolicyYamlList.size(); i++) {
 			policyYaml temp = PolicyYamlList.get(i);
-			Policies.add(temp.getPolicies());
+			policies tmpPolicy = temp.getPolicies();
+			if(!hasNS) {
+				tmpPolicy.setNamespace("default");
+				tmpPolicy.getInPolicies().get(0).getFilters().get(0).getNsSelector().clear();
+				tmpPolicy.getInPolicies().get(0).getFilters().get(0).putNsSelector("name", "default");
+			}
+			Policies.add(tmpPolicy);
 		}
 	}
 	
@@ -662,6 +669,7 @@ public class BVgenerator{
 			for(String Key: this.getPolicies().get(i).getPods().keySet()) {
 				if(!p.getLabels().containsKey(Key)) {
 					this.getPolicies().get(i).clearSelectedPods(index);
+					break;
 				}
 				if(p.getLabel(Key).equals(this.getPolicies().get(i).getFromPods(Key))) {
 					//If label matched
@@ -1076,7 +1084,7 @@ public class BVgenerator{
 					tmpBitSet.flip(0, InAllow.length());
 					tmpBitSet.and(this.getPods().get(i).getAllowPodIn());
 					for(int tmp_i = 0;;) {
-						tmp_i = tmpBitSet.nextSetBit(i);
+						tmp_i = tmpBitSet.nextSetBit(tmp_i);
 						if(tmp_i == -1) {
 							break;
 						}
@@ -1261,49 +1269,49 @@ public class BVgenerator{
 	}
 	
 	public void allReachableVerifier() {
-		System.out.println("--------\nverfifying allReachable...");
+		//System.out.println("--------\nverfifying allReachable...");
 		long starttime = System.nanoTime();
 		for(int i = 0; i< this.getPods().size();i++) {
 			BitSet temp = new BitSet();
 			temp.set(0, this.getPods().size());
 			temp.xor(this.getPods().get(i).getAllowPodIn());
 			if(temp.isEmpty()) {
-				System.out.println(this.getPods().get(i).getName() + " all reachable");
+				//System.out.println(this.getPods().get(i).getName() + " all reachable");
 			}
 		}
 		long stoptime = System.nanoTime();
 		//System.out.println("Cost time: " + (stoptime - starttime));
-		//System.out.print((stoptime - starttime)+"\t");
+		System.out.print((stoptime - starttime)+"\t");
 	}
 	
 	public void allIsolatedVerifier() {
-		System.out.println("--------\nverfifying allIsolated...");
+		//System.out.println("--------\nverfifying allIsolated...");
 		long starttime = System.nanoTime();
 		for(int i = 0; i< this.getPods().size();i++) {
 			if(this.getPods().get(i).getAllowPodIn().isEmpty()) {
-				System.out.println(this.getPods().get(i).getName() + " all isolated");
+				//System.out.println(this.getPods().get(i).getName() + " all isolated");
 			}
 		}
 		long stoptime = System.nanoTime();
 		//System.out.println("Cost time: " + (stoptime - starttime));
-		//System.out.print((stoptime - starttime)+"\t");
+		System.out.print((stoptime - starttime)+"\t");
 	}
 	
 	public void certainIsolatedVerifier() {
-		System.out.println("--------\nverfifying certainIsolated...");
+		//System.out.println("--------\nverfifying certainIsolated...");
 		long starttime = System.nanoTime();
 		for(int i = 0; i< this.getPods().size();i++) {
 			if(!this.getPods().get(i).getAllowPodIn().get(0)) {
-				System.out.println(this.getPods().get(i).getName() + " isolated from system");
+				//System.out.println(this.getPods().get(i).getName() + " isolated from system");
 			}
 		}
 		long stoptime = System.nanoTime();
 		//System.out.println("Cost time: " + (stoptime - starttime));
-		//System.out.print((stoptime - starttime)+"\t");
+		System.out.print((stoptime - starttime)+"\t");
 	}
 	
 	public void userReachableVerifier() {
-		System.out.println("--------\nverfifying userReachable...");
+		//System.out.println("--------\nverfifying userReachable...");
 		// Hash pods by namespace, namespace labels and pod labels
 		//HashMap<String, BitSet> nsNameHash = new HashMap<String, BitSet>();
 		//for (int i = 0; i < this.getPods().size(); i++) {
@@ -1322,17 +1330,17 @@ public class BVgenerator{
 			temp.flip(0, this.getPods().size());
 			temp.and(this.getPods().get(i).getAllowPodIn());
 			if(!temp.isEmpty()) {
-				System.out.println(this.getPods().get(i).getName() + " can be reached by other user");
+				//System.out.println(this.getPods().get(i).getName() + " can be reached by other user");
 			}
 		}
 		long stoptime = System.nanoTime();
 		//TODO System.out.println("tomcat can be reached by other user");		
 		//System.out.println("Cost time: " + (stoptime - starttime));
-		//System.out.print((stoptime - starttime)+"\t");
+		System.out.print((stoptime - starttime)+"\t");
 	}
 	
 	public void policyCoverageVerifier() {
-		System.out.println("--------\nverfifying policyCoverage...");
+		//System.out.println("--------\nverfifying policyCoverage...");
 		// Hash pods by namespace, namespace labels and pod labels
 		long starttime = System.nanoTime();
 		for(int i = 0; i< this.getPods().size();i++) {
@@ -1348,18 +1356,18 @@ public class BVgenerator{
 					temp0.and(temp1);
 					temp0.xor(temp1);
 					if(temp0.isEmpty()) {
-						System.out.print("Policy" + j + " covers Policy" + k + ", delete Policy" + k + "?");
+						//System.out.println("Policy" + j + " covers Policy" + k + ", delete Policy" + k + "?");
 					}
 				}
 			}
 		}
 		long stoptime = System.nanoTime();
 		//System.out.println("Cost time: " + (stoptime - starttime));
-		//System.out.print((stoptime - starttime)+"\t");
+		System.out.print((stoptime - starttime)+"\t");
 	}
 	
 	public void policyConflictVerifier() {
-		System.out.println("--------\nverfifying policyConflict...");
+		//System.out.println("--------\nverfifying policyConflict...");
 		// Hash pods by namespace, namespace labels and pod labels
 		long starttime = System.nanoTime();
 		for(int i = 0; i< this.getPods().size();i++) {
@@ -1376,14 +1384,14 @@ public class BVgenerator{
 					temp0.and(temp1);
 					temp0.xor(temp1);
 					if(temp0.isEmpty()) {
-						System.out.print("Policy" + j + " conflicts with Policy" + k);
+						//System.out.println("Policy" + j + " conflicts with Policy" + k);
 					}
 				}
 			}
 		}
 		long stoptime = System.nanoTime();
 		//System.out.println("Cost time: " + (stoptime - starttime));
-		//System.out.print((stoptime - starttime)+"\t");
+		System.out.print((stoptime - starttime)+"\t");
 	}
 	
 	public void init(String filePath) {
@@ -1414,7 +1422,7 @@ public class BVgenerator{
 				}
 			}
 		}
-		this.yaml2Policies();
+		this.yaml2Policies(true);
 		this.yaml2Pods(true);
 		this.yaml2NS(true);
 		System.out.print("");
@@ -1439,7 +1447,7 @@ public class BVgenerator{
 			this.getNSYamlList().add(nsyaml);
 		}
 
-		this.yaml2Policies();
+		this.yaml2Policies(true);
 		this.yaml2Pods(true);
 		this.yaml2NS(true);
 		long starttime = System.nanoTime();
@@ -1454,35 +1462,132 @@ public class BVgenerator{
 	public void tempInit2(int podNum, int nsNum, int policyNum) {
 		// initiate policy
 		for (int i = 0; i < policyNum; i++) {
-			policyYaml policyyaml = new policyYaml("examples/policy"+podNum+"_"+nsNum+"_"+policyNum+"/testpolicy" + i + ".yaml");
+			policyYaml policyyaml = new policyYaml("examples/full_compare/test"+podNum+"_"+nsNum+"_"+policyNum+"/testpolicy" + i + ".yaml");
 			this.getPolicyYamlList().add(policyyaml);
 		}
 
 		// initiate pod
 		for (int i = 0; i < podNum; i++) {
-			podYaml podyaml = new podYaml("examples/policy"+podNum+"_"+nsNum+"_"+policyNum+"/testpod" + i + ".yaml");
+			podYaml podyaml = new podYaml("examples/full_compare/test"+podNum+"_"+nsNum+"_"+policyNum+"/testpod" + i + ".yaml");
 			this.getPodYamlList().add(podyaml);
 		}
 
 		// initiate NS
-		for (int i = 0; i < nsNum; i++) {
-			nsYaml nsyaml = new nsYaml("examples/policy"+podNum+"_"+nsNum+"_"+policyNum+"/testns" + i + ".yaml");
+		for (int i = 0; i < 1; i++) {
+			nsYaml nsyaml = new nsYaml("examples/full_compare/test"+podNum+"_"+nsNum+"_"+policyNum+"/testns" + i + ".yaml");
 			this.getNSYamlList().add(nsyaml);
 		}
 
-		this.yaml2Policies();
+		this.yaml2Policies(false);
+		this.yaml2Pods(false);
+		this.yaml2NS(false);
+		Runtime run = Runtime.getRuntime();
+		//System.out.println(run.totalMemory()-run.freeMemory());
+		System.out.println("Generating reachability matrix...");
+		long starttime = System.nanoTime();
+		//bvg.naiveVerify();
+		//this.prefilterVerify();
+		this.naiveVerify();
+		long stoptime = System.nanoTime();
+		// bvg.calculateAllowMatrixs();
+		//System.out.println("Cost time: " + (stoptime - starttime));
+		//System.out.println("Cost space: " + (run.totalMemory()-run.freeMemory()));
+		System.out.println(stoptime-starttime);
+		for(int i = 0; i< 103; i++) {
+			this.allReachableVerifier();
+			this.allIsolatedVerifier();
+			this.certainIsolatedVerifier();
+			this.userReachableVerifier();
+			this.policyCoverageVerifier();
+			this.policyConflictVerifier();
+			System.out.println("");//run.totalMemory()-run.freeMemory());
+		}
+	}
+	
+	public void tempFullComparison(int podNum, int nsNum, int policyNum, boolean naive) {
+		Runtime run = Runtime.getRuntime();
+		long startmemory = run.totalMemory()-run.freeMemory();
+		// initiate policy
+		for (int i = 0; i < policyNum; i++) {
+			policyYaml policyyaml = new policyYaml("examples/full_compare/test"+podNum+"_"+nsNum+"_"+policyNum+"/testpolicy" + i + ".yaml");
+			this.getPolicyYamlList().add(policyyaml);
+		}
+
+		// initiate pod
+		for (int i = 0; i < podNum; i++) {
+			podYaml podyaml = new podYaml("examples/full_compare/test"+podNum+"_"+nsNum+"_"+policyNum+"/testpod" + i + ".yaml");
+			this.getPodYamlList().add(podyaml);
+		}
+
+		// initiate NS
+		for (int i = 0; i < 1; i++) {
+			nsYaml nsyaml = new nsYaml("examples/full_compare/test"+podNum+"_"+nsNum+"_"+policyNum+"/testns" + i + ".yaml");
+			this.getNSYamlList().add(nsyaml);
+		}
+
+		this.yaml2Policies(false);
+		this.yaml2Pods(false);
+		this.yaml2NS(false);
+		//System.out.println(run.totalMemory()-run.freeMemory());
+		System.out.println("Generating reachability matrix...");
+		if(naive) {
+			long starttime = System.nanoTime();
+			this.naiveVerify();
+			long stoptime = System.nanoTime();
+			long stopmemory = run.totalMemory()-run.freeMemory();
+			System.out.println((stoptime-starttime) + "\t" + (stopmemory-startmemory));
+			run.gc();
+		}else {
+			long starttime = System.nanoTime();
+			this.prefilterVerify();
+			long stoptime = System.nanoTime();
+			long stopmemory = run.totalMemory()-run.freeMemory();
+			System.out.println((stoptime-starttime) + "\t" + (stopmemory-startmemory));
+			for(int i = 0; i< 5; i++) {
+				this.allReachableVerifier();
+				this.allIsolatedVerifier();
+				this.certainIsolatedVerifier();
+				this.userReachableVerifier();
+				this.policyCoverageVerifier();
+				this.policyConflictVerifier();
+				System.out.println("");//run.totalMemory()-run.freeMemory());
+			}
+			run.gc();
+		}
+	}
+	
+	public void tempInitFullRelation(int podD, int labelD, int policyD, int podNum, int policyNum) {
+		// initiate policy
+		for (int i = 0; i < policyNum; i++) {
+			policyYaml policyyaml = new policyYaml("examples/full_relation/test"+podD+"_"+labelD+"_"+policyD+"/testpolicy" + i + ".yaml");
+			this.getPolicyYamlList().add(policyyaml);
+		}
+
+		// initiate pod
+		for (int i = 0; i < podNum; i++) {
+			podYaml podyaml = new podYaml("examples/full_relation/test"+podD+"_"+labelD+"_"+policyD+"/testpod" + i + ".yaml");
+			this.getPodYamlList().add(podyaml);
+		}
+
+		// initiate NS
+		for (int i = 0; i < 1; i++) {
+			nsYaml nsyaml = new nsYaml("examples/full_relation/test"+podD+"_"+labelD+"_"+policyD+"/testns" + i + ".yaml");
+			this.getNSYamlList().add(nsyaml);
+		}
+
+		this.yaml2Policies(false);
 		this.yaml2Pods(false);
 		this.yaml2NS(false);
 		//System.out.println("Generating reachability matrix...");
-		//long starttime = System.nanoTime();
+		long starttime = System.nanoTime();
 		//bvg.naiveVerify();
 		this.prefilterVerify();
 		//this.naiveVerify();
-		//long stoptime = System.nanoTime();
+		long stoptime = System.nanoTime();
 		// bvg.calculateAllowMatrixs();
 		//System.out.println("Cost time: " + (stoptime - starttime));
-		//System.out.println((stoptime-starttime));
-		for(int i = 0; i< 110000; i++) {
+		System.out.println(stoptime-starttime);
+		/*for(int i = 0; i< 110000; i++) {
 			this.allReachableVerifier();
 			this.allIsolatedVerifier();
 			this.certainIsolatedVerifier();
@@ -1491,7 +1596,144 @@ public class BVgenerator{
 			this.policyConflictVerifier();
 			Runtime run = Runtime.getRuntime();
 			System.out.println(run.totalMemory()-run.freeMemory());
+		}*/
+	}
+	
+	public void tempInitIncre(int podNum, int nsNum, int policyNum) {
+		// initiate policy
+		for (int i = 0; i < policyNum - 10; i++) {
+			policyYaml policyyaml = new policyYaml("examples/full_compare/test" + podNum + "_" + nsNum + "_" + policyNum + "/testpolicy" + i + ".yaml");
+			this.getPolicyYamlList().add(policyyaml);
 		}
+
+		// initiate pod
+		for (int i = 0; i < podNum - 10; i++) {
+			podYaml podyaml = new podYaml("examples/full_compare/test" + podNum + "_" + nsNum + "_" + policyNum + "/testpod" + i + ".yaml");
+			this.getPodYamlList().add(podyaml);
+		}
+
+		// initiate NS
+		for (int i = 0; i < 1; i++) {
+			nsYaml nsyaml = new nsYaml("examples/full_compare/test"+ podNum + "_" + nsNum + "_" + policyNum + "/testns" + i + ".yaml");
+			this.getNSYamlList().add(nsyaml);
+		}
+
+		this.yaml2Policies(false);
+		this.yaml2Pods(false);
+		this.yaml2NS(false);
+		System.out.println("Generating reachability matrix...");
+		//long starttime = System.nanoTime();
+		//bvg.naiveVerify();
+		this.prefilterVerify();
+		//this.naiveVerify();
+		//long stoptime = System.nanoTime();
+		// bvg.calculateAllowMatrixs();
+		//System.out.println("Cost time: " + (stoptime - starttime));
+		System.out.println("Add Policy Cost time: ");
+		for (int i = policyNum - 10; i < policyNum; i++) {
+			long starttime = System.nanoTime();
+			this.addPolicy("examples/full_compare/test" + podNum + "_" + nsNum + "_" + policyNum + "/testpolicy" + i + ".yaml");
+			long stoptime = System.nanoTime();
+			System.out.println(stoptime - starttime);
+		}
+		System.out.println("Add Pod Cost time: ");
+		for (int i = podNum - 10; i < podNum; i++) {
+			long starttime = System.nanoTime();
+			this.addPod("examples/full_compare/test" + podNum + "_" + nsNum + "_" + policyNum + "/testpod" + i + ".yaml");
+			long stoptime = System.nanoTime();
+			System.out.println(stoptime - starttime);
+		}
+		System.out.println("Del Policy Cost time: ");
+		for (int i = policyNum; i > policyNum-10; i--) {
+			int policyIndex = randomUtil.getRandomInt(0, i);
+			long starttime = System.nanoTime();
+			this.removePolicy(policyIndex);
+			long stoptime = System.nanoTime();
+			System.out.println(stoptime - starttime);
+		}
+		System.out.println("Del Pod Cost time: ");
+		for (int i = podNum; i > podNum-10; i--) {
+			int podIndex = randomUtil.getRandomInt(0, i);
+			long starttime = System.nanoTime();
+			this.removePod(podIndex);
+			long stoptime = System.nanoTime();
+			System.out.println(stoptime - starttime);
+		}
+		// get add links
+		HashSet<String> addIndex = new HashSet<String>();
+		for(int i = 0; i < 10; i++) {
+			int linksrc = 0;
+			int linkdst = 0;
+			while(true) {
+				linksrc = randomUtil.getRandomInt(0, this.Pods.size());
+				linkdst = randomUtil.getRandomInt(0, this.Pods.size());
+				if(this.Pods.get(linkdst).getAllowPodIn().get(linksrc)) {
+					continue;
+				}
+				String link = Integer.toString(linksrc) + "_" + Integer.toString(linkdst);
+				if(addIndex.contains(link)) {
+					continue;
+				}
+				addIndex.add(link);
+				break;
+			}
+		}
+
+		System.out.println("Add Link Cost time: ");
+		Policygenerator pg = new Policygenerator(this);
+		for(String index : addIndex) {
+			int linksrc = Integer.parseInt(index.split("_")[0]);
+			int linkdst = Integer.parseInt(index.split("_")[1]);
+			pg.getAddLinks().add(new allowLink(linksrc, linkdst));
+		}
+		long starttime = System.nanoTime();
+		pg.generateFix();
+		long stoptime = System.nanoTime();
+		System.out.println(stoptime - starttime);
+	
+		// get del links
+		HashSet<String> delIndex = new HashSet<String>();
+		for(int i = 0; i < 10; i++) {
+			int linksrc = 0;
+			int linkdst = 0;
+			while(true) {
+				linksrc = randomUtil.getRandomInt(0, this.Pods.size());
+				linkdst = randomUtil.getRandomInt(0, this.Pods.size());
+				if(!this.Pods.get(linkdst).getAllowPodIn().get(linksrc)) {
+					continue;
+				}
+				String link = Integer.toString(linksrc) + "_" + Integer.toString(linkdst);
+				if(delIndex.contains(link)) {
+					continue;
+				}
+				delIndex.add(link);
+				break;
+			}
+		}
+		
+		System.out.println("Del Link Cost time: ");
+		pg.addLinks.clear();
+		for(String index : delIndex) {
+			int linksrc = Integer.parseInt(index.split("_")[0]);
+			int linkdst = Integer.parseInt(index.split("_")[1]);
+			pg.getDelLinks().add(new allowLink(linksrc, linkdst));
+		}
+		starttime = System.nanoTime();
+		pg.generateFix();
+		stoptime = System.nanoTime();
+		System.out.println(stoptime - starttime);
+		
+		//System.out.println((stoptime-starttime));
+		//for(int i = 0; i< 110000; i++) {
+		//	this.allReachableVerifier();
+		//	this.allIsolatedVerifier();
+		//	this.certainIsolatedVerifier();
+		//	this.userReachableVerifier();
+		//	this.policyCoverageVerifier();
+		//	this.policyConflictVerifier();
+		//	Runtime run = Runtime.getRuntime();
+		//	System.out.println(run.totalMemory()-run.freeMemory());
+		//}
 	}
 	
 	public void tempInitPods(int podNum, int nsNum, int policyNum) {
@@ -1513,7 +1755,7 @@ public class BVgenerator{
 			this.getNSYamlList().add(nsyaml);
 		}
 		
-		this.yaml2Policies();
+		this.yaml2Policies(false);
 		this.yaml2Pods(false);
 		this.yaml2NS(false);
 		

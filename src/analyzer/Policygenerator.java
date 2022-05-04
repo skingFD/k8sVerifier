@@ -103,7 +103,7 @@ public class Policygenerator{
 		// Remove the policy creating this link
 		ArrayList<Integer> rmPolicyList = new ArrayList<Integer>();
 		for(int policyIndex : this.bG.getPods().get(link.getDstIndex()).getSelectedIndex()) {
-			if(this.bG.getPolicies().get(link.getDstIndex()).getInAllow().get(link.getSrcIndex())) {
+			if(this.bG.getPolicies().get(policyIndex).getInAllow().get(link.getSrcIndex())) {
 				rmPolicyList.add(policyIndex);
 			}
 		}

@@ -90,19 +90,82 @@ public class Kano{
 	}
 	
 	public static void main(String args[]) {
+		
 		// When testing incremental verification, you need to check:
 		// 1. policy: selected pods, inAllow, eAllow
 		// 2. pod: selected index, AllowPodE, AllowPodIn, AllowEIndex, AllowInIndex
-		//Kano kano = new Kano("examples\\test\\");
-		//kano.generateMatrix();
-		//kano.addLink();
-		//Incremental
-		//kano.bvgenerator.addPolicy("examples\\test_add\\testpolicy_add.yaml");
-		//kano.bvgenerator.addPod("examples\\test_add\\testpod_add.yaml");
-		//kano.bvgenerator.removePolicy(0);
-		//kano.bvgenerator.removePod(0);
-		//kano.allVerify();
+		/**
+		 * doing full relationship experiments
+		 */
+		/*
+		System.out.println("Full relationship * 103");
+		int[] podNum = {1000, 2000, 3000, 4000, 5000};
+		int[] policyNum = {1000, 2000, 3000, 4000, 5000};
+		int[] labelNum = {6, 8, 12, 14};
+		for(int pod : podNum) {
+			System.out.println("Pod Num: " + pod);
+			for(int i = 0; i < 103; i++) {
+				BVgenerator bg = new BVgenerator();
+				bg.tempInitFullRelation(5000, 10, 5000, pod, 1000);
+			}
+		}
+		for(int policy : policyNum) {
+			System.out.println("Policy Num: " + policy);
+			for(int i = 0; i < 103; i++) {
+				BVgenerator bg = new BVgenerator();
+				bg.tempInitFullRelation(5000, 10, 5000, 2000, policy);
+			}
+		}
+		System.out.println("Label Num: 10");
+		for(int i = 0; i < 103; i++) {
+			BVgenerator bg = new BVgenerator();
+			bg.tempInitFullRelation(5000, 10, 5000, 2000, 1000);
+		}
+		for(int label : labelNum) {
+			System.out.println("Label Num: " + label);
+			for(int i = 0; i < 103; i++) {
+				BVgenerator bg = new BVgenerator();
+				bg.tempInitFullRelation(2000, label, 1000, 2000, 1000);
+			}
+		}
+		*/
+		
+		/**
+		 * doing Full Comparison experiments
+		 */
+		
 		BVgenerator bg = new BVgenerator();
-		bg.tempInit2(100, 5, 98);
+		/*int[] podNum = {500, 1000, 2000, 5000, 10000, 20000, 50000, 100000};
+		int[] policyNum = {200, 500, 1000, 2000, 5000, 10000, 20000, 50000};
+		for(int i = 0; i< 8; i++) {
+			int pod = podNum[i];
+			int policy = policyNum[i];
+			System.out.println("Pod Num: " + pod);
+			bg = new BVgenerator();
+			System.out.println("Naive:");
+			bg.tempFullComparison(pod, pod/100, policy, true);
+			System.out.println("Prefil and verifier:");
+			bg.tempFullComparison(pod, pod/100, policy, false);
+		}*/
+		
+		System.out.println("Prefil and verifier:");
+		bg.tempInitIncre(150000, 1500, 75000);
+		
+		/**
+		 * Incre and fix
+		 */
+		/*
+		BVgenerator bg = new BVgenerator();
+		int[] podNum = {500, 1000, 2000, 5000, 10000, 20000, 50000, 100000};
+		int[] policyNum = {200, 500, 1000, 2000, 5000, 10000, 20000, 50000};
+		for(int i = 0; i< 8; i++) {
+			int pod = podNum[i];
+			int policy = policyNum[i];
+			System.out.println("Pod Num: " + pod);
+			bg = new BVgenerator();
+			System.out.println("Naive:");
+			bg.tempInitIncre(pod, pod/100, policy);
+		}
+		*/
 	}
 }

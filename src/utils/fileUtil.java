@@ -5,6 +5,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
@@ -13,25 +14,29 @@ import java.util.HashSet;
 import analyzer.BVgenerator;
 import analyzer.Policygenerator;
 import bean.allowLink;
+import bean.resources.namespace;
+import bean.resources.pod;
+import bean.resources.policies;
 import bean.yaml.policyYaml;
 
 public class fileUtil {
-	public static int podLimit = 1000;
-	public static int nsLimit = 10;
-	public static int policyLimit = 500;
+	public static int podLimit = 150000;
+	public static int nsLimit = 1;
+	public static int policyLimit = 75000;
 	
-	public static int podLabelLimit = 5;
-	public static int nsLabelLimit = 5;
-	public static int keyLimit = 10;
-	public static int valueLimit = 10;
-	public static int userLimit = 5;
-	public static int policySelectLabelLimit = 3;
-	public static int policyNsLabelLimit = 3;
-	public static int policyPodLabelLimit = 3;
+	public static int podLabelLimit = 2;
+	public static int nsLabelLimit = 1;
+	public static int keyLimit = 1500;
+	public static int valueLimit = 2;
+	public static int userLimit = 2;
+	public static int policySelectLabelLimit = 2;
+	public static int policyNsLabelLimit = 1;
+	public static int policyPodLabelLimit = 2;
+	public static String dic = "";
 	public static void writeFile(String fileName) {
 		try {
 			BufferedWriter bw = new BufferedWriter(
-					new OutputStreamWriter(new FileOutputStream(new File("examples/test/" + fileName)), "UTF-8"));
+					new OutputStreamWriter(new FileOutputStream(new File("examples/test_dic/" + fileName)), "UTF-8"));
 			bw.write("test0");
 			bw.newLine();
 			bw.write("test1");
@@ -40,6 +45,40 @@ public class fileUtil {
 			System.err.println("write errors :" + e);
 		}
 	}
+
+	public static void writeResource(pod p, String fileName) {
+		try {
+			BufferedWriter bw = new BufferedWriter(
+					new OutputStreamWriter(new FileOutputStream(new File("examples/test_dic/" + fileName)), "UTF-8"));
+			bw.write(p.generateYaml().getYamlDump());
+			bw.close();
+		} catch (Exception e) {
+			System.err.println("write errors :" + e);
+		}
+	}
+	
+	public static void writeResource(policies p, String fileName) {
+		try {
+			BufferedWriter bw = new BufferedWriter(
+					new OutputStreamWriter(new FileOutputStream(new File("examples/test_dic/" + fileName)), "UTF-8"));
+			bw.write(p.generateYaml().getYamlDump());
+			bw.close();
+		} catch (Exception e) {
+			System.err.println("write errors :" + e);
+		}
+	}
+	
+	public static void writeResource(namespace n, String fileName) {
+		try {
+			BufferedWriter bw = new BufferedWriter(
+					new OutputStreamWriter(new FileOutputStream(new File("examples/test_dic/" + fileName)), "UTF-8"));
+			bw.write(n.generateYaml().getYamlDump());
+			bw.close();
+		} catch (Exception e) {
+			System.err.println("write errors :" + e);
+		}
+	}
+	
 	//generate random pods;
 	public static void generateRandomPod(String fileName, int podNum) {
 		//Init random parameters
@@ -52,7 +91,7 @@ public class fileUtil {
 		//Generate
 		try {
 			BufferedWriter bw = new BufferedWriter(
-					new OutputStreamWriter(new FileOutputStream(new File("examples/test/" + fileName)), "UTF-8"));
+					new OutputStreamWriter(new FileOutputStream(new File("examples/test150000_1500_75000/" + fileName)), "UTF-8"));
 			bw.write("apiVersion: apps/v1");
 			bw.newLine();
 			bw.write("kind: Deployment");
@@ -61,7 +100,7 @@ public class fileUtil {
 			bw.newLine();
 			bw.write("  name: pod" + podNum);
 			bw.newLine();
-			bw.write("  namespace: namespace" + randomUtil.getRandomInt(0, nsLimit));
+			bw.write("  namespace: default");
 			bw.newLine();
 			bw.write("spec:");
 			bw.newLine();
@@ -113,7 +152,7 @@ public class fileUtil {
 		//Generate
 		try {
 			BufferedWriter bw = new BufferedWriter(
-					new OutputStreamWriter(new FileOutputStream(new File("examples/test/" + fileName)), "UTF-8"));
+					new OutputStreamWriter(new FileOutputStream(new File("examples/test150000_1500_75000/" + fileName)), "UTF-8"));
 			bw.write("apiVersion: v1");
 			bw.newLine();
 			bw.write("kind: Namespace");
@@ -140,6 +179,7 @@ public class fileUtil {
 	public static void generateRandomPolicy(String fileName, int policyNum) {
 		//Init random parameters
 		int type = randomUtil.getRandomInt(0, 3);//0:ns 1:pod 2:ns+pod 
+		type = 2;
 		int selectLabels = randomUtil.getRandomInt(1, policySelectLabelLimit + 1);
 		int nsLabels = randomUtil.getRandomInt(1, policyNsLabelLimit + 1);
 		int podLabels = randomUtil.getRandomInt(1, policyPodLabelLimit + 1);
@@ -161,7 +201,7 @@ public class fileUtil {
 		//Generate
 		try {
 			BufferedWriter bw = new BufferedWriter(
-					new OutputStreamWriter(new FileOutputStream(new File("examples/test/" + fileName)), "UTF-8"));
+					new OutputStreamWriter(new FileOutputStream(new File("examples/test150000_1500_75000/" + fileName)), "UTF-8"));
 			bw.write("apiVersion: networking.k8s.io/v1");
 			bw.newLine();
 			bw.write("kind: NetworkPolicy");
@@ -170,7 +210,7 @@ public class fileUtil {
 			bw.newLine();
 			bw.write("  name: policy" + policyNum);
 			bw.newLine();
-			bw.write("  namespace: namespace" + randomUtil.getRandomInt(0, nsLimit));
+			bw.write("  namespace: default");
 			bw.newLine();
 			bw.write("spec:");
 			bw.newLine();
@@ -313,9 +353,13 @@ public class fileUtil {
 	}
 	
 	public static void main(String args[]) {
+		generateRandomConfigs();
+		
+		/*
 		int podNum = 100;
 		int nsNum = 5;
 		int policyNum = 50;
 		generateNotSparse(podNum, nsNum, policyNum);
+		*/
 	}
 }
