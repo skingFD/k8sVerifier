@@ -90,7 +90,8 @@ public class Kano{
 	}
 	
 	public static void main(String args[]) {
-		
+		int index = Integer.parseInt(args[0]);
+		int naive = Integer.parseInt(args[1]);
 		// When testing incremental verification, you need to check:
 		// 1. policy: selected pods, inAllow, eAllow
 		// 2. pod: selected index, AllowPodE, AllowPodIn, AllowEIndex, AllowInIndex
@@ -135,18 +136,23 @@ public class Kano{
 		 */
 		
 		BVgenerator bg = new BVgenerator();
-		int[] podNum = {10000, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000};
-		int[] policyNum = {6811, 339, 500, 1000, 2000, 5000, 10000, 20000, 50000};
-		for(int i = 0; i< 1; i++) {
-			int pod = podNum[i];
-			int policy = policyNum[i];
-			System.out.println("Pod Num: " + pod);
-			bg = new BVgenerator();
+		int[] podNum = {500, 1000, 2000, 5000, 10000, 20000, 50000, 100000};
+		int[] policyNum = {345, 685, 1352, 3390, 6777, 13569, 34033, 68111};
+		int i = index;
+
+		
+		int pod = podNum[i];
+		int policy = policyNum[i];
+		System.out.println("Pod Num: " + pod);
+		bg = new BVgenerator();
+		if(naive == 1) {
 			System.out.println("Naive:");
 			bg.tempFullComparison(pod, pod/100, policy, true);
+		}else if(naive == 0) {
 			System.out.println("Prefil and verifier:");
 			bg.tempFullComparison(pod, pod/100, policy, false);
 		}
+		
 		
 		//System.out.println("Prefil and verifier:");
 		//bg.tempInitIncre(150000, 1500, 75000);
@@ -154,18 +160,16 @@ public class Kano{
 		/**
 		 * Incre and fix
 		 */
+		
+		// BVgenerator bg = new BVgenerator();
+		// int[] podNum = {500, 1000, 2000, 5000, 10000, 20000, 50000, 100000};
+		// int[] policyNum = {200, 500, 1000, 2000, 5000, 10000, 20000, 50000};
 		/*
-		BVgenerator bg = new BVgenerator();
-		int[] podNum = {500, 1000, 2000, 5000, 10000, 20000, 50000, 100000};
-		int[] policyNum = {200, 500, 1000, 2000, 5000, 10000, 20000, 50000};
-		for(int i = 0; i< 8; i++) {
-			int pod = podNum[i];
-			int policy = policyNum[i];
-			System.out.println("Pod Num: " + pod);
-			bg = new BVgenerator();
-			System.out.println("Naive:");
-			bg.tempInitIncre(pod, pod/100, policy);
-		}
+		int pod = podNum[i];
+		int policy = policyNum[i];
+		System.out.println("Pod Num: " + pod);
+		System.out.println("Incre and fix:");
+		bg.tempInitIncre(pod, pod/100, policy);
 		*/
 	}
 }

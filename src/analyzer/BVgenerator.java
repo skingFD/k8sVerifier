@@ -1394,6 +1394,50 @@ public class BVgenerator{
 		System.out.print((stoptime - starttime)+"\t");
 	}
 	
+	public void policyUselessVerifier() {
+		//System.out.println("--------\nverfifying policyUseless...");
+		// Hash pods by namespace, namespace labels and pod labels
+		long starttime = System.nanoTime();
+		for(int i = 0; i< this.getPolicies().size();i++) {
+			policies p = this.getPolicies().get(i);
+			if(p.getSelectedPods().isEmpty() || p.getInAllow().isEmpty()) {
+				// System.out.println(p.getName());
+			}
+		}
+		long stoptime = System.nanoTime();
+		//System.out.println("Cost time: " + (stoptime - starttime));
+		System.out.print((stoptime - starttime)+"\t");
+	}
+
+	public void policyCorrelationVerifier() {
+		//System.out.println("--------\nverfifying policyCorrelation...");
+		// Hash pods by namespace, namespace labels and pod labels
+		long starttime = System.nanoTime();
+		for(int i = 0; i< this.getPods().size();i++) {
+			for(int j = 0; j < this.getPods().get(i).getSelectedIndex().size();j++) {
+				for(int k = 0; k < this.getPods().get(i).getSelectedIndex().size();k++) {
+					if(k == j) {
+						continue;
+					}
+					BitSet temp0 = new BitSet();
+					BitSet temp1 = new BitSet();
+					temp0.or(this.getPolicies().get(this.getPods().get(i).getSelectedIndex().get(j)).getInAllow());
+					temp1.or(this.getPolicies().get(this.getPods().get(i).getSelectedIndex().get(k)).getInAllow());
+					//temp1.flip(0, this.getPods().size());
+					temp0.and(temp1);
+					//temp0.xor(temp1);
+					if(!temp0.isEmpty()) {
+						//System.out.println("Policy" + j + " conflicts with Policy" + k);
+					}
+				}
+			}
+		}
+		long stoptime = System.nanoTime();
+		//System.out.println("Cost time: " + (stoptime - starttime));
+		System.out.print((stoptime - starttime)+"\t");
+	}
+	
+	
 	public void init(String filePath) {
 		File file = new File(filePath);
 		File[] fileList = file.listFiles();
@@ -1494,12 +1538,14 @@ public class BVgenerator{
 		//System.out.println("Cost space: " + (run.totalMemory()-run.freeMemory()));
 		System.out.println(stoptime-starttime);
 		for(int i = 0; i< 103; i++) {
-			this.allReachableVerifier();
-			this.allIsolatedVerifier();
+			//this.allReachableVerifier();
+			//this.allIsolatedVerifier();
 			this.certainIsolatedVerifier();
 			this.userReachableVerifier();
 			this.policyCoverageVerifier();
 			this.policyConflictVerifier();
+			this.policyUselessVerifier();
+			this.policyCorrelationVerifier();
 			System.out.println("");//run.totalMemory()-run.freeMemory());
 		}
 	}
@@ -1546,12 +1592,14 @@ public class BVgenerator{
 			System.out.println("time(nano): \t  memory(B): ");
 			System.out.println((stoptime-starttime) + "\t" + (stopmemory-startmemory));
 			for(int i = 0; i< 5; i++) {
-				this.allReachableVerifier();
-				this.allIsolatedVerifier();
+				//this.allReachableVerifier();
+				//this.allIsolatedVerifier();
 				this.certainIsolatedVerifier();
 				this.userReachableVerifier();
 				this.policyCoverageVerifier();
 				this.policyConflictVerifier();
+				this.policyUselessVerifier();
+				this.policyCorrelationVerifier();
 				System.out.println("");//run.totalMemory()-run.freeMemory());
 			}
 			run.gc();
